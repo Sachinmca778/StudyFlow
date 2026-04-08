@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/store/auth'
 import { Subject, StudySession } from '@/lib/types'
-import { Play, Square, Plus, Trash2, Clock, Loader2, CheckCircle2, Star } from 'lucide-react'
+import { Play, Square, Plus, Trash2, Clock, Loader2, CheckCircle2, Star, BookOpen } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function TimeTracker() {
