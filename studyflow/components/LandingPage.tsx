@@ -248,14 +248,14 @@ export default function LandingPage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
+          <div className="flex overflow-x-auto gap-2 mb-8 pb-2 hide-scrollbar justify-start md:justify-center">
             {previewTabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActivePreview(tab.id)}
-                  className={`px-5 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all ${
+                  className={`px-4 py-2.5 rounded-xl font-semibold flex items-center gap-2 transition-all whitespace-nowrap text-sm ${
                     activePreview === tab.id
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
                       : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
@@ -284,12 +284,12 @@ export default function LandingPage() {
             </div>
 
             {/* App Content */}
-            <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 min-h-[500px]">
+            <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 min-h-[400px] sm:min-h-[500px]">
               {/* Sidebar + Main Layout */}
-              <div className="flex">
+              <div className="flex flex-col sm:flex-row">
                 {/* Sidebar */}
-                <div className="w-56 bg-white border-r border-gray-100 hidden md:block">
-                  <div className="p-4 border-b border-gray-100">
+                <div className="w-full sm:w-56 bg-white border-b sm:border-r sm:border-b-0 border-gray-100">
+                  <div className="hidden sm:block p-4 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
                         <BookOpen className="w-4 h-4 text-white" />
@@ -297,14 +297,22 @@ export default function LandingPage() {
                       <span className="text-lg font-bold text-gray-900">StudyFlow</span>
                     </div>
                   </div>
-                  <div className="p-3 space-y-1">
+                  <div className="hidden sm:block p-3 space-y-1">
                     <SidebarItem icon={<BarChart3 className="w-4 h-4" />} label="Dashboard" active={activePreview === 0} />
                     <SidebarItem icon={<Calendar className="w-4 h-4" />} label="Study Planner" active={activePreview === 1} />
                     <SidebarItem icon={<Clock className="w-4 h-4" />} label="Time Tracker" active={activePreview === 2} />
                     <SidebarItem icon={<Zap className="w-4 h-4" />} label="Focus Timer" active={activePreview === 3} />
                     <SidebarItem icon={<BookOpen className="w-4 h-4" />} label="Assignments" active={activePreview === 4} />
                   </div>
-                  <div className="p-3 mx-2 bg-blue-50 rounded-xl border border-blue-100">
+                  {/* Mobile tabs */}
+                  <div className="sm:hidden flex overflow-x-auto gap-1 p-2">
+                    <MobileTab icon={<BarChart3 className="w-3 h-3" />} label="Dashboard" active={activePreview === 0} onClick={() => setActivePreview(0)} />
+                    <MobileTab icon={<Calendar className="w-3 h-3" />} label="Planner" active={activePreview === 1} onClick={() => setActivePreview(1)} />
+                    <MobileTab icon={<Clock className="w-3 h-3" />} label="Tracker" active={activePreview === 2} onClick={() => setActivePreview(2)} />
+                    <MobileTab icon={<Zap className="w-3 h-3" />} label="Timer" active={activePreview === 3} onClick={() => setActivePreview(3)} />
+                    <MobileTab icon={<BookOpen className="w-3 h-3" />} label="Tasks" active={activePreview === 4} onClick={() => setActivePreview(4)} />
+                  </div>
+                  <div className="hidden sm:block p-3 mx-2 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                         S
@@ -318,7 +326,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 p-6">
+                <div className="flex-1 p-4 sm:p-6">
                   {/* Dashboard Preview */}
                   {activePreview === 0 && <DashboardPreview />}
                   {/* Study Planner Preview */}
@@ -957,6 +965,27 @@ function SidebarItem({ icon, label, active }: {
       {icon}
       <span className="font-medium">{label}</span>
     </div>
+  )
+}
+
+function MobileTab({ icon, label, active, onClick }: {
+  icon: React.ReactNode
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 ${
+        active 
+          ? 'bg-blue-600 text-white' 
+          : 'bg-gray-100 text-gray-600'
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
   )
 }
 
