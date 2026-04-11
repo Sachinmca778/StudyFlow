@@ -2,20 +2,21 @@
 
 import { useState } from 'react'
 import { useAuthStore } from '@/lib/store/auth'
-import { 
-  LayoutDashboard, 
-  Calendar, 
-  Clock, 
-  BookOpen, 
-  FileText, 
-  Timer, 
+import {
+  LayoutDashboard,
+  Calendar,
+  Clock,
+  BookOpen,
+  FileText,
+  Timer,
   Settings,
   LogOut,
   Menu,
   X,
   Sparkles,
   TrendingUp,
-  Target
+  Target,
+  Trophy,
 } from 'lucide-react'
 import StudyPlanner from './dashboard/StudyPlanner'
 import TimeTracker from './dashboard/TimeTracker'
@@ -24,6 +25,9 @@ import AssignmentManager from './dashboard/AssignmentManager'
 import PerformanceDashboard from './dashboard/PerformanceDashboard'
 import FocusTimer from './dashboard/FocusTimer'
 import SettingsPage from './dashboard/Settings'
+import AIInsights from './dashboard/AIInsights'
+import Gamification from './dashboard/Gamification'
+import LeaderboardAndReferrals from './dashboard/LeaderboardAndReferrals'
 
 export default function Dashboard() {
   const { profile, signOut } = useAuthStore()
@@ -37,6 +41,9 @@ export default function Dashboard() {
     { id: 'calendar', label: 'Calendar', icon: Calendar, color: 'pink' },
     { id: 'assignments', label: 'Assignments', icon: FileText, color: 'amber' },
     { id: 'focus', label: 'Focus Timer', icon: Timer, color: 'emerald' },
+    { id: 'insights', label: 'AI Insights', icon: Sparkles, color: 'cyan' },
+    { id: 'gamification', label: 'Achievements', icon: Trophy, color: 'amber' },
+    { id: 'leaderboard', label: 'Leaderboard', icon: TrendingUp, color: 'rose' },
     { id: 'settings', label: 'Settings', icon: Settings, color: 'slate' },
   ]
 
@@ -67,6 +74,12 @@ export default function Dashboard() {
         return <AssignmentManager />
       case 'focus':
         return <FocusTimer />
+      case 'insights':
+        return <AIInsights />
+      case 'gamification':
+        return <Gamification />
+      case 'leaderboard':
+        return <LeaderboardAndReferrals />
       case 'settings':
         return <SettingsPage />
       default:
@@ -87,26 +100,26 @@ export default function Dashboard() {
       )}
 
       {/* Sidebar */}
-      <aside 
-        className={`fixed top-0 left-0 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 z-50 ${
+      <aside
+        className={`fixed top-0 left-0 h-full w-64 sm:w-72 bg-white shadow-xl transform transition-transform duration-300 z-50 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gray-100">
+          <div className="p-4 sm:p-6 border-b border-gray-100">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <BookOpen className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     StudyFlow
                   </span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setSidebarOpen(false)}
                 className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -116,24 +129,24 @@ export default function Dashboard() {
           </div>
 
           {/* User Profile Card */}
-          <div className="p-4 mx-4 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
+          <div className="p-3 sm:p-4 mx-3 sm:mx-4 mt-3 sm:mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg flex-shrink-0">
                 {(profile?.full_name || profile?.email || 'S')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">
+                <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                   {profile?.full_name || 'Student'}
                 </p>
                 <p className="text-xs text-gray-600 truncate">
-                  {profile?.class_level || 'Setup Profile'} • {profile?.target_exam || 'No Exam'}
+                  {profile?.class_level || 'Setup'} • {profile?.target_exam || 'No Exam'}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
+          <nav className="flex-1 p-3 sm:p-4 space-y-1.5 overflow-y-auto custom-scrollbar">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = activeTab === item.id
@@ -144,16 +157,16 @@ export default function Dashboard() {
                     setActiveTab(item.id)
                     setSidebarOpen(false)
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl transition-all duration-200 text-sm sm:text-base ${
                     isActive
                       ? `bg-gradient-to-r ${getGradient(item.color)} text-white shadow-lg`
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                  <span className="font-medium truncate">{item.label}</span>
                   {isActive && (
-                    <div className="ml-auto w-2 h-2 bg-white rounded-full" />
+                    <div className="ml-auto w-2 h-2 bg-white rounded-full flex-shrink-0" />
                   )}
                 </button>
               )
@@ -161,12 +174,12 @@ export default function Dashboard() {
           </nav>
 
           {/* Sign Out */}
-          <div className="p-4 border-t border-gray-100">
+          <div className="p-3 sm:p-4 border-t border-gray-100">
             <button
               onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200"
+              className="w-full flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 text-sm sm:text-base"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span className="font-medium">Sign Out</span>
             </button>
           </div>
@@ -196,6 +209,9 @@ export default function Dashboard() {
                   {activeTab === 'calendar' && 'View your schedule at a glance'}
                   {activeTab === 'assignments' && 'Manage tasks and exams'}
                   {activeTab === 'focus' && 'Stay focused with Pomodoro technique'}
+                  {activeTab === 'insights' && 'AI-powered analysis of your study patterns'}
+                  {activeTab === 'gamification' && 'Badges, levels, and streaks'}
+                  {activeTab === 'leaderboard' && 'Compete and earn rewards'}
                   {activeTab === 'settings' && 'Customize your experience'}
                 </p>
               </div>
