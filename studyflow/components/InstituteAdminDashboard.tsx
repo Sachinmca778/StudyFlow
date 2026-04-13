@@ -6,7 +6,7 @@ import { Institute } from '@/lib/institute-types'
 import { 
   LayoutDashboard, Users, GraduationCap, IndianRupee, 
   Calendar, BarChart3, Settings, LogOut, Menu, X,
-  UserCheck, Bell
+  UserCheck, Bell, Upload
 } from 'lucide-react'
 
 // Import admin components
@@ -18,6 +18,7 @@ import AttendanceTracker from './admin/AttendanceTracker'
 import PerformanceReports from './admin/PerformanceReports'
 import FeeReminders from './admin/FeeReminders'
 import InstituteSettings from './admin/InstituteSettings'
+import BulkImport from './admin/BulkImport'
 
 type InstituteAdminDashboardProps = {
   userId: string
@@ -36,6 +37,7 @@ export default function InstituteAdminDashboard({ userId, institute }: Institute
     { id: 'attendance', label: 'Attendance', icon: UserCheck },
     { id: 'performance', label: 'Performance', icon: BarChart3 },
     { id: 'reminders', label: 'Reminders', icon: Bell },
+    { id: 'bulk-import', label: 'Bulk Import', icon: Upload },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
@@ -111,6 +113,7 @@ export default function InstituteAdminDashboard({ userId, institute }: Institute
           {activeTab === 'attendance' && <AttendanceTracker institute={institute} />}
           {activeTab === 'performance' && <PerformanceReports institute={institute} />}
           {activeTab === 'reminders' && <FeeReminders institute={institute} />}
+          {activeTab === 'bulk-import' && <BulkImport institute={institute} />}
           {activeTab === 'settings' && <InstituteSettings institute={institute} />}
         </div>
       </main>
