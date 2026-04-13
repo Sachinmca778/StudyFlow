@@ -22,11 +22,16 @@ import {
   Play,
   Square,
   ChevronRight,
-  ArrowUpRight
+  ArrowUpRight,
+  Building2,
+  GraduationCap,
+  IndianRupee,
+  UserCheck
 } from 'lucide-react'
 
 export default function LandingPage() {
   const [showLogin, setShowLogin] = useState(false)
+  const [loginMode, setLoginMode] = useState<'student' | 'institute'>('student')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activePreview, setActivePreview] = useState(0)
 

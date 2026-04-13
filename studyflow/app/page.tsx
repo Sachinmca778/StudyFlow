@@ -4,22 +4,28 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/store/auth'
 import { Profile } from '@/lib/types'
-import LandingPage from '@/components/LandingPage'
+import { Institute } from '@/lib/institute-types'
+import LandingPage from '@/components/NewLandingPage'
 import Dashboard from '@/components/Dashboard'
 import Login from '@/components/auth/Login'
 import Onboarding from '@/components/Onboarding'
+import InstituteOnboarding from '@/components/InstituteOnboarding'
+import InstituteAdminDashboard from '@/components/InstituteAdminDashboard'
 import { Loader2 } from 'lucide-react'
 
 export default function Home() {
   const { profile, setProfile, setLoading } = useAuthStore()
   const [loading, setLoadingState] = useState(true)
   const [showOnboarding, setShowOnboarding] = useState(false)
+  const [institute, setInstitute] = useState<Institute | null>(null)
+  const [showInstituteOnboarding, setShowInstituteOnboarding] = useState(false)
+  const [userType, setUserType] = useState<'student' | 'institute' | null>(null)
 
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        fetchProfile(session.user.id, session.user.email)
+        checkUserType(session.user.id, session.user.email)
       } else {
         setLoadingState(false)
         setLoading(false)
@@ -31,9 +37,11 @@ export default function Home() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        fetchProfile(session.user.id, session.user.email)
+        checkUserType(session.user.id, session.user.email)
       } else {
         setProfile(null)
+        setInstitute(null)
+        setUserType(null)
         setLoadingState(false)
         setLoading(false)
       }
@@ -41,6 +49,33 @@ export default function Home() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const checkUserType = async (userId: string, email?: string) => {
+    try {
+      // Check if user is an institute admin
+      const { data: instituteData } = await supabase
+        .from('institutes')
+        .select('*')
+        .eq('admin_user_id', userId)
+        .single()
+
+      if (instituteData) {
+        setInstitute(instituteData as Institute)
+        setUserType('institute')
+        setLoadingState(false)
+        setLoading(false)
+        return
+      }
+
+      // Otherwise, treat as student
+      setUserType('student')
+      fetchProfile(userId, email)
+    } catch (error) {
+      console.error('Error checking user type:', error)
+      setUserType('student')
+      fetchProfile(userId, email)
+    }
+  }
 
   const fetchProfile = async (userId: string, email?: string) => {
     try {
@@ -90,16 +125,38 @@ export default function Home() {
     )
   }
 
-  // Not logged in - show landing page
-  if (!profile) {
+  // Not logged in - show landing page with user type selection
+  if (!profile && !institute) {
     return <LandingPage />
   }
 
-  // Logged in but no profile - show onboarding
-  if (showOnboarding) {
-    return <Onboarding onComplete={() => setShowOnboarding(false)} />
+  // Institute Admin Flow
+  if (userType === 'institute') {
+    if (!institute) {
+      // Show institute onboarding
+      return (
+        <InstituteOnboarding
+          userId={(profile?.id || '') as string}
+          onComplete={() => {
+            window.location.reload() // Reload to fetch institute data
+          }}
+        />
+      )
+    }
+    // Show institute admin dashboard
+    return <InstituteAdminDashboard userId={institute.admin_user_id} institute={institute} />
   }
 
-  // Logged in with profile - show dashboard
-  return <Dashboard />
+  // Student Flow
+  if (userType === 'student') {
+    // Logged in but no profile - show onboarding
+    if (showOnboarding) {
+      return <Onboarding onComplete={() => setShowOnboarding(false)} />
+    }
+
+    // Logged in with profile - show dashboard
+    return <Dashboard />
+  }
+
+  return null
 }

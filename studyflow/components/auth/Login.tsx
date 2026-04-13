@@ -6,9 +6,10 @@ import { X, Loader2, Mail } from 'lucide-react'
 
 interface LoginProps {
   onClose: () => void
+  mode?: 'student' | 'institute'
 }
 
-export default function Login({ onClose }: LoginProps) {
+export default function Login({ onClose, mode = 'student' }: LoginProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
