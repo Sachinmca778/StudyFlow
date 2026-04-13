@@ -28,9 +28,19 @@ export default function Login({ onClose, mode = 'student' }: LoginProps) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              signup_mode: mode, // Store the signup mode in user metadata
+            }
+          }
         })
         if (error) throw error
-        setSuccessMessage('Account created! Check your email to verify.')
+        setSuccessMessage('Account created! Redirecting...')
+        // Wait a bit then reload
+        setTimeout(() => {
+          onClose()
+          window.location.reload()
+        }, 1500)
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -77,6 +87,9 @@ export default function Login({ onClose, mode = 'student' }: LoginProps) {
         </button>
 
         <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold mb-3">
+            {mode === 'institute' ? '🏫 Institute Admin' : '🎓 Student'}
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>

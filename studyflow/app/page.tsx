@@ -52,16 +52,30 @@ export default function Home() {
 
   const checkUserType = async (userId: string, email?: string) => {
     try {
+      // First check user metadata for signup mode
+      const { data: { user } } = await supabase.auth.getUser()
+      const signupMode = user?.user_metadata?.signup_mode
+      
       // Check if user is an institute admin
-      const { data: instituteData } = await supabase
+      const { data: instituteData, error: instituteError } = await supabase
         .from('institutes')
         .select('*')
         .eq('admin_user_id', userId)
-        .single()
+        .maybeSingle()
 
       if (instituteData) {
+        // Institute exists - show dashboard
         setInstitute(instituteData as Institute)
         setUserType('institute')
+        setLoadingState(false)
+        setLoading(false)
+        return
+      }
+
+      // If signup mode was institute but no institute record, show institute onboarding
+      if (signupMode === 'institute') {
+        setUserType('institute')
+        setShowInstituteOnboarding(true)
         setLoadingState(false)
         setLoading(false)
         return
@@ -72,6 +86,7 @@ export default function Home() {
       fetchProfile(userId, email)
     } catch (error) {
       console.error('Error checking user type:', error)
+      // Default to student on error
       setUserType('student')
       fetchProfile(userId, email)
     }
@@ -132,16 +147,36 @@ export default function Home() {
 
   // Institute Admin Flow
   if (userType === 'institute') {
-    if (!institute) {
-      // Show institute onboarding
-      return (
-        <InstituteOnboarding
-          userId={(profile?.id || '') as string}
-          onComplete={() => {
-            window.location.reload() // Reload to fetch institute data
-          }}
-        />
-      )
+    if (!institute || showInstituteOnboarding) {
+      // Show institute onboarding - get user ID from auth
+      const InstituteOnboardingWrapper = () => {
+        const [currentUserId, setCurrentUserId] = useState<string>('')
+        
+        useEffect(() => {
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            if (user) setCurrentUserId(user.id)
+          })
+        }, [])
+
+        if (!currentUserId) {
+          return (
+            <div className="min-h-screen flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          )
+        }
+
+        return (
+          <InstituteOnboarding
+            userId={currentUserId}
+            onComplete={() => {
+              window.location.reload()
+            }}
+          />
+        )
+      }
+
+      return <InstituteOnboardingWrapper />
     }
     // Show institute admin dashboard
     return <InstituteAdminDashboard userId={institute.admin_user_id} institute={institute} />

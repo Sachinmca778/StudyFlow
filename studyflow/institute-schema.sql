@@ -24,7 +24,28 @@ CREATE TABLE public.institutes (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Institute Students table
+-- Batches/Courses table (Create this BEFORE institute_students)
+CREATE TABLE public.batches (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  institute_id UUID REFERENCES public.institutes(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  course_name TEXT NOT NULL,
+  description TEXT,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  class_level TEXT,
+  total_seats INTEGER,
+  enrolled_students INTEGER DEFAULT 0,
+  fee_amount DECIMAL(10, 2) NOT NULL,
+  schedule_days TEXT[], -- ['Monday', 'Wednesday', 'Friday']
+  schedule_time TEXT, -- '10:00 AM - 12:00 PM'
+  teacher_name TEXT,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Institute Students table (Create this AFTER batches)
 CREATE TABLE public.institute_students (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   institute_id UUID REFERENCES public.institutes(id) ON DELETE CASCADE NOT NULL,
@@ -43,27 +64,6 @@ CREATE TABLE public.institute_students (
   batch_id UUID REFERENCES public.batches(id) ON DELETE SET NULL,
   status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended', 'graduated')),
   profile_photo_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Batches/Courses table
-CREATE TABLE public.batches (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  institute_id UUID REFERENCES public.institutes(id) ON DELETE CASCADE NOT NULL,
-  name TEXT NOT NULL,
-  course_name TEXT NOT NULL,
-  description TEXT,
-  start_date DATE NOT NULL,
-  end_date DATE,
-  class_level TEXT,
-  total_seats INTEGER,
-  enrolled_students INTEGER DEFAULT 0,
-  fee_amount DECIMAL(10, 2) NOT NULL,
-  schedule_days TEXT[], -- ['Monday', 'Wednesday', 'Friday']
-  schedule_time TEXT, -- '10:00 AM - 12:00 PM'
-  teacher_name TEXT,
-  is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
