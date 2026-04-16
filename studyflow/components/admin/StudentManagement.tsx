@@ -155,8 +155,14 @@ export default function StudentManagement({ institute }: StudentManagementProps)
     return matchesSearch && matchesClass && matchesBatch && matchesStatus
   })
 
-  // Get unique classes from students
-  const uniqueClasses = Array.from(new Set(students.map(s => s.class_level).filter(Boolean)))
+  // Get unique classes from students (filter out null/undefined)
+  const uniqueClasses = Array.from(
+    new Set(
+      students
+        .map(s => s.class_level)
+        .filter((cls): cls is string => Boolean(cls))
+    )
+  )
 
   // Stats by class
   const getClassStats = () => {

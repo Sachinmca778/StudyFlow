@@ -59,8 +59,14 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
     }
   }
 
-  // Get unique classes
-  const uniqueClasses = Array.from(new Set(students.map(s => s.class_level).filter(Boolean)))
+  // Get unique classes (filter out null/undefined)
+  const uniqueClasses = Array.from(
+    new Set(
+      students
+        .map(s => s.class_level)
+        .filter((cls): cls is string => Boolean(cls))
+    )
+  )
 
   // Filter students by class
   const filteredStudents = filterClass === 'all' 
