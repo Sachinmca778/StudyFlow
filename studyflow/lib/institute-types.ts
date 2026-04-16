@@ -155,6 +155,90 @@ export type InstituteStaff = {
   updated_at: string
 }
 
+export type Assignment = {
+  id: string
+  institute_id: string
+  batch_id: string
+  teacher_id: string | null
+  title: string
+  description: string | null
+  subject: string
+  assignment_type: 'homework' | 'project' | 'assignment' | 'practical'
+  assigned_date: string
+  due_date: string
+  total_marks: number | null
+  attachment_url: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type AssignmentSubmission = {
+  id: string
+  assignment_id: string
+  student_id: string
+  submission_date: string
+  submission_text: string | null
+  attachment_url: string | null
+  marks_obtained: number | null
+  feedback: string | null
+  status: 'pending' | 'submitted' | 'graded' | 'late' | 'missing'
+  graded_by: string | null
+  graded_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type Announcement = {
+  id: string
+  institute_id: string
+  title: string
+  content: string
+  announcement_type: 'general' | 'urgent' | 'event' | 'holiday' | 'exam' | 'fee'
+  target_audience: 'all' | 'students' | 'parents' | 'staff' | 'specific_batch'
+  batch_id: string | null
+  priority: 'low' | 'normal' | 'high' | 'urgent'
+  attachment_url: string | null
+  published_date: string
+  expiry_date: string | null
+  is_active: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type Notification = {
+  id: string
+  institute_id: string
+  recipient_type: 'student' | 'parent' | 'staff'
+  recipient_id: string
+  notification_type: 'announcement' | 'fee_reminder' | 'assignment' | 'attendance' | 'exam' | 'general'
+  title: string
+  message: string
+  link_url: string | null
+  is_read: boolean
+  sent_via: string[]
+  created_at: string
+}
+
+export type LeaveRequest = {
+  id: string
+  institute_id: string
+  student_id: string
+  leave_type: 'sick' | 'casual' | 'emergency' | 'other'
+  from_date: string
+  to_date: string
+  total_days: number
+  reason: string
+  attachment_url: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  approved_by: string | null
+  approval_date: string | null
+  remarks: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Extended types with relations
 export type StudentWithBatch = InstituteStudent & {
   batch?: Batch
@@ -169,5 +253,19 @@ export type AttendanceWithStudent = StudentAttendance & {
 }
 
 export type PerformanceWithStudent = StudentPerformance & {
+  student?: InstituteStudent
+}
+
+export type AssignmentWithBatch = Assignment & {
+  batch?: Batch
+  teacher?: InstituteStaff
+}
+
+export type AssignmentSubmissionWithDetails = AssignmentSubmission & {
+  student?: InstituteStudent
+  assignment?: Assignment
+}
+
+export type LeaveRequestWithStudent = LeaveRequest & {
   student?: InstituteStudent
 }

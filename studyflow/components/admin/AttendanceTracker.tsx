@@ -14,6 +14,7 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [attendance, setAttendance] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const [filterClass, setFilterClass] = useState<string>('all')
 
   useEffect(() => {
     fetchStudents()
@@ -27,6 +28,7 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
         .select('*')
         .eq('institute_id', institute.id)
         .eq('status', 'active')
+        .order('class_level')
         .order('student_name')
 
       if (error) throw error
@@ -55,6 +57,25 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
       console.error('Error fetching attendance:', error)
     }
   }
+
+  // Get unique classes
+  const uniqueClasses = Array.from(new Set(students.map(s => s.class_level).filter(Boolean)))
+
+  // Filter students by class
+  const filteredStudents = filterClass === 'all' 
+    ? students 
+    : students.filter(s => s.class_level === filterClass)
+
+  // Get attendance stats
+  const getAttendanceStats = () => {
+    const present = filteredStudents.filter(s => attendance[s.id] === 'present').length
+    const absent = filteredStudents.filter(s => attendance[s.id] === 'absent').length
+    const late = filteredStudents.filter(s => attendance[s.id] === 'late').length
+    const unmarked = filteredStudents.filter(s => !attendance[s.id]).length
+    return { present, absent, late, unmarked }
+  }
+
+  const stats = getAttendanceStats()
 
   const markAttendance = async (studentId: string, status: string) => {
     try {
@@ -120,8 +141,8 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
       </div>
 
       {/* Date Selector & Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Date
           </label>
@@ -129,35 +150,66 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="input"
+            className="input w-full"
           />
         </div>
 
-        <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-          <div className="flex items-center gap-3 mb-2">
-            <Check className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-medium text-green-900">Present</span>
-          </div>
-          <p className="text-3xl font-bold text-green-600">{presentCount}</p>
+        <div className="bg-green-50 rounded-xl shadow-sm p-4 border border-green-200">
+          <p className="text-sm text-green-600 mb-1">Present</p>
+          <p className="text-3xl font-bold text-green-700">{stats.present}</p>
         </div>
 
-        <div className="bg-red-50 rounded-xl p-6 border border-red-200">
-          <div className="flex items-center gap-3 mb-2">
-            <X className="w-5 h-5 text-red-600" />
-            <span className="text-sm font-medium text-red-900">Absent</span>
-          </div>
-          <p className="text-3xl font-bold text-red-600">{absentCount}</p>
+        <div className="bg-red-50 rounded-xl shadow-sm p-4 border border-red-200">
+          <p className="text-sm text-red-600 mb-1">Absent</p>
+          <p className="text-3xl font-bold text-red-700">{stats.absent}</p>
         </div>
 
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-          <div className="flex items-center gap-3 mb-2">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">Total</span>
-          </div>
-          <p className="text-3xl font-bold text-blue-600">{students.length}</p>
+        <div className="bg-yellow-50 rounded-xl shadow-sm p-4 border border-yellow-200">
+          <p className="text-sm text-yellow-600 mb-1">Late</p>
+          <p className="text-3xl font-bold text-yellow-700">{stats.late}</p>
+        </div>
+
+        <div className="bg-gray-50 rounded-xl shadow-sm p-4 border border-gray-200">
+          <p className="text-sm text-gray-600 mb-1">Unmarked</p>
+          <p className="text-3xl font-bold text-gray-700">{stats.unmarked}</p>
         </div>
       </div>
 
+      {/* Class Filter */}
+      <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center gap-4 flex-wrap">
+          <span className="text-sm font-medium text-gray-700">Filter by Class:</span>
+          <button
+            onClick={() => setFilterClass('all')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filterClass === 'all'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            All Classes ({students.length})
+          </button>
+          {uniqueClasses.sort().map(cls => {
+            const count = students.filter(s => s.class_level === cls).length
+            return (
+              <button
+                key={cls}
+                onClick={() => setFilterClass(cls)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  filterClass === cls
+                    ? 'bg-purple-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {cls} ({count})
+              </button>
+            )
+          })}
+        </div>
+        <div className="mt-3 text-sm text-gray-600">
+          Showing {filteredStudents.length} students
+        </div>
+      </div>
       {/* Attendance Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
         <div className="overflow-x-auto">
@@ -171,7 +223,7 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {students.map((student) => (
+              {filteredStudents.map((student) => (
                 <tr key={student.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <span className="font-medium text-gray-900">{student.student_name}</span>
@@ -180,7 +232,9 @@ export default function AttendanceTracker({ institute }: AttendanceTrackerProps)
                     <span className="text-sm text-gray-600">{student.enrollment_number}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-sm text-gray-600">{student.class_level}</span>
+                    <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-700">
+                      {student.class_level || 'N/A'}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">

@@ -6,7 +6,7 @@ import { Institute } from '@/lib/institute-types'
 import { 
   LayoutDashboard, Users, GraduationCap, IndianRupee, 
   Calendar, BarChart3, Settings, LogOut, Menu, X,
-  UserCheck, Bell, Upload
+  UserCheck, Bell, Upload, FileText, Megaphone
 } from 'lucide-react'
 
 // Import admin components
@@ -19,6 +19,8 @@ import PerformanceReports from './admin/PerformanceReports'
 import FeeReminders from './admin/FeeReminders'
 import InstituteSettings from './admin/InstituteSettings'
 import BulkImport from './admin/BulkImport'
+import AssignmentManagement from './admin/AssignmentManagement'
+import CommunicationCenter from './admin/CommunicationCenter'
 
 type InstituteAdminDashboardProps = {
   userId: string
@@ -33,9 +35,11 @@ export default function InstituteAdminDashboard({ userId, institute }: Institute
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'students', label: 'Students', icon: Users },
     { id: 'batches', label: 'Batches', icon: GraduationCap },
+    { id: 'assignments', label: 'Assignments', icon: FileText },
     { id: 'fees', label: 'Fee Management', icon: IndianRupee },
     { id: 'attendance', label: 'Attendance', icon: UserCheck },
     { id: 'performance', label: 'Performance', icon: BarChart3 },
+    { id: 'communication', label: 'Communication', icon: Megaphone },
     { id: 'reminders', label: 'Reminders', icon: Bell },
     { id: 'bulk-import', label: 'Bulk Import', icon: Upload },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -109,9 +113,11 @@ export default function InstituteAdminDashboard({ userId, institute }: Institute
           {activeTab === 'overview' && <AdminOverview institute={institute} />}
           {activeTab === 'students' && <StudentManagement institute={institute} />}
           {activeTab === 'batches' && <BatchManagement institute={institute} />}
+          {activeTab === 'assignments' && <AssignmentManagement institute={institute} />}
           {activeTab === 'fees' && <FeeManagement institute={institute} />}
           {activeTab === 'attendance' && <AttendanceTracker institute={institute} />}
           {activeTab === 'performance' && <PerformanceReports institute={institute} />}
+          {activeTab === 'communication' && <CommunicationCenter institute={institute} />}
           {activeTab === 'reminders' && <FeeReminders institute={institute} />}
           {activeTab === 'bulk-import' && <BulkImport institute={institute} />}
           {activeTab === 'settings' && <InstituteSettings institute={institute} />}
