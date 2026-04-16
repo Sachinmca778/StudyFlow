@@ -9,6 +9,7 @@ type AttendanceTrackerProps = {
   institute: Institute
 }
 
+
 export default function AttendanceTracker({ institute }: AttendanceTrackerProps) {
   const [students, setStudents] = useState<InstituteStudent[]>([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
