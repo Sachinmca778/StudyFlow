@@ -16,8 +16,10 @@ export default function BulkImport({ institute }: BulkImportProps) {
   const [results, setResults] = useState<{
     success: number
     failed: number
+    skipped: number
     errors: string[]
     generated: string[]
+    skippedList: string[]
   } | null>(null)
 
   // ── File handling ────────────────────────────────────────────────────────────
@@ -110,19 +112,25 @@ export default function BulkImport({ institute }: BulkImportProps) {
 
   // ── Students import ──────────────────────────────────────────────────────────
   const importStudents = async (data: any[]) => {
-    let success = 0, failed = 0
+    let success = 0, failed = 0, skipped = 0
     const errors: string[] = []
     const generated: string[] = []
+    const skippedList: string[] = []
 
     // Pre-fetch all existing enrollment numbers for this institute
     // so we can detect duplicates before even hitting the DB
     const { data: existing } = await supabase
       .from('institute_students')
-      .select('enrollment_number')
+      .select('enrollment_number, phone, class_level')
       .eq('institute_id', institute.id)
 
     const usedNumbers = new Set(
       (existing ?? []).map(r => r.enrollment_number).filter(Boolean)
+    )
+
+    // Set of "phone|class_level" combos already in DB → skip these rows
+    const usedPhoneClass = new Set(
+      (existing ?? []).map(r => `${r.phone}|${r.class_level}`)
     )
 
     for (let i = 0; i < data.length; i++) {
@@ -140,6 +148,16 @@ export default function BulkImport({ institute }: BulkImportProps) {
         failed++
         continue
       }
+
+      // ── Duplicate check: phone + class already exists? ─────────────────────
+      const phoneClassKey = `${row.phone.trim()}|${row.class_level.trim()}`
+      if (usedPhoneClass.has(phoneClassKey)) {
+        skippedList.push(`${label} (${row.class_level}, ${row.phone})`)
+        skipped++
+        continue
+      }
+      // Mark as used for rest of this batch (handles duplicate rows in same CSV)
+      usedPhoneClass.add(phoneClassKey)
 
       // ── Date normalization ─────────────────────────────────────────────────
       const dob = normalizeDate(row.date_of_birth)
@@ -193,7 +211,7 @@ export default function BulkImport({ institute }: BulkImportProps) {
       }
     }
 
-    setResults({ success, failed, errors, generated })
+    setResults({ success, failed, skipped, errors, generated, skippedList })
   }
 
   // ── Fees import ──────────────────────────────────────────────────────────────
@@ -235,7 +253,7 @@ export default function BulkImport({ institute }: BulkImportProps) {
       else success++
     }
 
-    setResults({ success, failed, errors, generated: [] })
+    setResults({ success, failed, skipped: 0, errors, generated: [], skippedList: [] })
   }
 
   // ── Template download ────────────────────────────────────────────────────────
@@ -375,12 +393,19 @@ export default function BulkImport({ institute }: BulkImportProps) {
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
           <h2 className="text-lg font-bold text-gray-900">Import Results</h2>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="bg-green-50 rounded-lg p-4 border border-green-200 flex items-center gap-3">
               <CheckCircle className="w-6 h-6 text-green-600" />
               <div>
-                <p className="text-sm text-green-700 font-medium">Successful</p>
+                <p className="text-sm text-green-700 font-medium">Imported</p>
                 <p className="text-2xl font-bold text-green-600">{results.success}</p>
+              </div>
+            </div>
+            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200 flex items-center gap-3">
+              <Info className="w-6 h-6 text-yellow-600" />
+              <div>
+                <p className="text-sm text-yellow-700 font-medium">Skipped (duplicate)</p>
+                <p className="text-2xl font-bold text-yellow-600">{results.skipped}</p>
               </div>
             </div>
             <div className="bg-red-50 rounded-lg p-4 border border-red-200 flex items-center gap-3">
@@ -391,6 +416,20 @@ export default function BulkImport({ institute }: BulkImportProps) {
               </div>
             </div>
           </div>
+
+          {results.skippedList.length > 0 && (
+            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+              <p className="font-medium text-yellow-900 mb-2 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                Skipped — already enrolled with same phone in same class ({results.skippedList.length})
+              </p>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {results.skippedList.map((msg, i) => (
+                  <p key={i} className="text-sm text-yellow-800">⏭ {msg}</p>
+                ))}
+              </div>
+            </div>
+          )}
 
           {results.generated.length > 0 && (
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">

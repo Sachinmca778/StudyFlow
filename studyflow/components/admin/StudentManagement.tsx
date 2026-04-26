@@ -110,11 +110,31 @@ export default function StudentManagement({ institute }: StudentManagementProps)
     }
 
     try {
+      // Check phone + class duplicate before inserting
+      const { data: existing, error: checkError } = await supabase
+        .from('institute_students')
+        .select('id, student_name')
+        .eq('institute_id', institute.id)
+        .eq('phone', formData.phone.trim())
+        .eq('class_level', formData.class_level)
+        .maybeSingle()
+
+      if (existing) {
+        alert(
+          `A student with phone ${formData.phone} is already enrolled in ${formData.class_level}.\n` +
+          `Existing student: ${existing.student_name}`
+        )
+        setLoading(false)
+        return
+      }
+
       const { error } = await supabase
         .from('institute_students')
         .insert({
           institute_id: institute.id,
           ...formData,
+          student_name: formData.student_name.trim(),
+          phone: formData.phone.trim(),
           batch_id: formData.batch_id || null,
         })
 

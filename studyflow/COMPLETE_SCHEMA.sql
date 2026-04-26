@@ -108,7 +108,9 @@ CREATE TABLE public.institute_students (
   status              TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended', 'graduated')),
   profile_photo_url   TEXT,
   created_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  -- Same phone number cannot be in the same class within the same institute
+  UNIQUE(institute_id, phone, class_level)
 );
 
 -- ============================================================
