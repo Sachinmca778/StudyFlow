@@ -20,75 +20,92 @@ export default function Home() {
   const [institute, setInstitute] = useState<Institute | null>(null)
   const [showInstituteOnboarding, setShowInstituteOnboarding] = useState(false)
   const [userType, setUserType] = useState<'student' | 'institute' | null>(null)
+  const [authChecked, setAuthChecked] = useState(false)
 
   useEffect(() => {
-    // Check active session
+    // Check active session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+      if (session?.user) {
         checkUserType(session.user.id, session.user.email)
       } else {
         setLoadingState(false)
         setLoading(false)
+        setAuthChecked(true)
       }
     })
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        checkUserType(session.user.id, session.user.email)
-      } else {
+    // Listen for auth state changes (login, logout, email verification)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event)
+
+      if (event === 'SIGNED_OUT') {
         setProfile(null)
         setInstitute(null)
         setUserType(null)
+        setShowOnboarding(false)
+        setShowInstituteOnboarding(false)
         setLoadingState(false)
         setLoading(false)
+        setAuthChecked(true)
+        return
+      }
+
+      // Handle: SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED, EMAIL_CONFIRMED
+      if (session?.user) {
+        checkUserType(session.user.id, session.user.email)
       }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  const checkUserType = async (userId: string, email?: string) => {
+  const checkUserType = async (userId: string, email?: string | null) => {
     try {
-      // First check user metadata for signup mode
+      setLoadingState(true)
+
+      // Get fresh user data including metadata
       const { data: { user } } = await supabase.auth.getUser()
       const signupMode = user?.user_metadata?.signup_mode
-      
-      // Check if user is an institute admin
-      const { data: instituteData, error: instituteError } = await supabase
+
+      // Check if user has an institute
+      const { data: instituteData } = await supabase
         .from('institutes')
         .select('*')
         .eq('admin_user_id', userId)
         .maybeSingle()
 
       if (instituteData) {
-        // Institute exists - show dashboard
+        // Institute admin with existing institute → go to dashboard
         setInstitute(instituteData as Institute)
         setUserType('institute')
+        setShowInstituteOnboarding(false)
         setLoadingState(false)
         setLoading(false)
+        setAuthChecked(true)
         return
       }
 
-      // If signup mode was institute but no institute record, show institute onboarding
+      // No institute found — check signup mode
       if (signupMode === 'institute') {
+        // Institute admin but no institute yet → show onboarding
         setUserType('institute')
         setShowInstituteOnboarding(true)
         setLoadingState(false)
         setLoading(false)
+        setAuthChecked(true)
         return
       }
 
-      // Otherwise, treat as student
+      // Default: student flow
       setUserType('student')
-      fetchProfile(userId, email)
+      await fetchProfile(userId, email ?? undefined)
+
     } catch (error) {
-      console.error('Error checking user type:', error)
-      // Default to student on error
+      console.error('Error in checkUserType:', error)
       setUserType('student')
-      fetchProfile(userId, email)
+      await fetchProfile(userId, email ?? undefined)
+    } finally {
+      setAuthChecked(true)
     }
   }
 
@@ -101,97 +118,94 @@ export default function Home() {
         .single()
 
       if (error) {
-        // Profile doesn't exist - create it automatically
+        // Profile doesn't exist yet — create it
         if (error.code === 'PGRST116' || error.message?.includes('0 rows')) {
-          console.log('Profile not found, creating...')
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .insert({
-              id: userId,
-              email: email || '',
-            })
+            .insert({ id: userId, email: email || '' })
             .select()
             .single()
 
           if (createError) throw createError
-          
+
           setProfile(newProfile as Profile)
-          setShowOnboarding(true) // Show onboarding for new users
+          setShowOnboarding(true)
         } else {
           throw error
         }
       } else {
         setProfile(data as Profile)
-        setShowOnboarding(!data.class_level) // Show onboarding if profile incomplete
+        // Show onboarding only if class_level is missing
+        setShowOnboarding(!data.class_level)
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      console.error('Error fetching/creating profile:', error)
     } finally {
       setLoadingState(false)
       setLoading(false)
     }
   }
 
-  if (loading) {
+  // ─── Loading State ───────────────────────────────────────────────────────────
+  if (loading || !authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-primary-600 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
       </div>
     )
   }
 
-  // Not logged in - show landing page with user type selection
-  if (!profile && !institute) {
+  // ─── Not Logged In ────────────────────────────────────────────────────────────
+  if (!profile && !institute && userType === null) {
     return <LandingPage />
   }
 
-  // Institute Admin Flow
+  // ─── Institute Admin Flow ─────────────────────────────────────────────────────
   if (userType === 'institute') {
+    // No institute record yet → show onboarding
     if (!institute || showInstituteOnboarding) {
-      // Show institute onboarding - get user ID from auth
-      const InstituteOnboardingWrapper = () => {
-        const [currentUserId, setCurrentUserId] = useState<string>('')
-        
-        useEffect(() => {
-          supabase.auth.getUser().then(({ data: { user } }) => {
-            if (user) setCurrentUserId(user.id)
-          })
-        }, [])
-
-        if (!currentUserId) {
-          return (
-            <div className="min-h-screen flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            </div>
-          )
-        }
-
-        return (
-          <InstituteOnboarding
-            userId={currentUserId}
-            onComplete={() => {
-              window.location.reload()
-            }}
-          />
-        )
-      }
-
       return <InstituteOnboardingWrapper />
     }
-    // Show institute admin dashboard
+    // Has institute → show dashboard
     return <InstituteAdminDashboard userId={institute.admin_user_id} institute={institute} />
   }
 
-  // Student Flow
+  // ─── Student Flow ─────────────────────────────────────────────────────────────
   if (userType === 'student') {
-    // Logged in but no profile - show onboarding
     if (showOnboarding) {
       return <Onboarding onComplete={() => setShowOnboarding(false)} />
     }
-
-    // Logged in with profile - show dashboard
     return <Dashboard />
   }
 
   return null
+}
+
+// Separate component to avoid hook-in-render issues
+function InstituteOnboardingWrapper() {
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setCurrentUserId(user.id)
+    })
+  }, [])
+
+  if (!currentUserId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    )
+  }
+
+  return (
+    <InstituteOnboarding
+      userId={currentUserId}
+      onComplete={() => window.location.reload()}
+    />
+  )
 }

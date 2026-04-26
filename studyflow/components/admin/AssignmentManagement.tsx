@@ -52,7 +52,7 @@ export default function AssignmentManagement({ institute }: AssignmentManagement
   const fetchAssignments = async () => {
     setLoading(true)
     const { data, error } = await supabase
-      .from('assignments')
+      .from('institute_assignments')
       .select(`
         *,
         batch:batches(name, course_name)
@@ -75,7 +75,7 @@ export default function AssignmentManagement({ institute }: AssignmentManagement
 
     if (selectedAssignment) {
       const { error } = await supabase
-        .from('assignments')
+        .from('institute_assignments')
         .update(assignmentData)
         .eq('id', selectedAssignment.id)
       
@@ -86,7 +86,7 @@ export default function AssignmentManagement({ institute }: AssignmentManagement
       }
     } else {
       const { error } = await supabase
-        .from('assignments')
+        .from('institute_assignments')
         .insert([assignmentData])
       
       if (!error) {
@@ -100,7 +100,7 @@ export default function AssignmentManagement({ institute }: AssignmentManagement
   const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this assignment?')) {
       const { error } = await supabase
-        .from('assignments')
+        .from('institute_assignments')
         .delete()
         .eq('id', id)
       

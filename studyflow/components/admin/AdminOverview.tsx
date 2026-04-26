@@ -86,7 +86,7 @@ export default function AdminOverview({ institute }: AdminOverviewProps) {
 
       // Total assignments
       const { count: totalAssignments } = await supabase
-        .from('assignments')
+        .from('institute_assignments')
         .select('*', { count: 'exact', head: true })
         .eq('institute_id', institute.id)
         .eq('is_active', true)
@@ -95,7 +95,7 @@ export default function AdminOverview({ institute }: AdminOverviewProps) {
       const nextWeek = new Date()
       nextWeek.setDate(nextWeek.getDate() + 7)
       const { count: pendingAssignments } = await supabase
-        .from('assignments')
+        .from('institute_assignments')
         .select('*', { count: 'exact', head: true })
         .eq('institute_id', institute.id)
         .gte('due_date', today)
