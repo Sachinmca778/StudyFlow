@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Institute, InstituteStudent, Batch } from '@/lib/institute-types'
-import { Plus, Search, Edit, Trash2, Phone, Mail, User } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Phone, Mail, RefreshCw } from 'lucide-react'
+import { generateEnrollmentNumber } from '@/lib/enrollment'
 
 type StudentManagementProps = {
   institute: Institute
@@ -19,17 +20,7 @@ export default function StudentManagement({ institute }: StudentManagementProps)
   const [filterBatch, setFilterBatch] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
 
-  // Predefined class levels
-  const classLevels = [
-    '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th',
-    '11th Science', '11th Commerce', '11th Arts',
-    '12th Science', '12th Commerce', '12th Arts',
-    'Nursery', 'LKG', 'UKG', 'Playgroup',
-    'BA 1st Year', 'BA 2nd Year', 'BA 3rd Year',
-    'BSc 1st Year', 'BSc 2nd Year', 'BSc 3rd Year',
-    'BCom 1st Year', 'BCom 2nd Year', 'BCom 3rd Year',
-    'Other'
-  ]
+  // Predefined class levels (used in the select dropdown below)
 
   const [formData, setFormData] = useState({
     student_name: '',
@@ -41,10 +32,35 @@ export default function StudentManagement({ institute }: StudentManagementProps)
     date_of_birth: '',
     gender: 'male' as 'male' | 'female' | 'other',
     address: '',
-    enrollment_number: '',
+    enrollment_number: '',   // will be auto-filled on modal open
     class_level: '',
     batch_id: '',
   })
+  const [enrollmentLoading, setEnrollmentLoading] = useState(false)
+
+  // Generate and pre-fill enrollment number when modal opens
+  const openAddModal = async () => {
+    setShowAddModal(true)
+    setEnrollmentLoading(true)
+    try {
+      const enr = await generateEnrollmentNumber(institute.id, institute.name)
+      setFormData(prev => ({ ...prev, enrollment_number: enr }))
+    } catch (e) {
+      console.error('Could not generate enrollment number', e)
+    } finally {
+      setEnrollmentLoading(false)
+    }
+  }
+
+  const regenerateEnrollment = async () => {
+    setEnrollmentLoading(true)
+    try {
+      const enr = await generateEnrollmentNumber(institute.id, institute.name)
+      setFormData(prev => ({ ...prev, enrollment_number: enr }))
+    } finally {
+      setEnrollmentLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchStudents()
@@ -86,6 +102,12 @@ export default function StudentManagement({ institute }: StudentManagementProps)
   const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
+    if (!formData.class_level) {
+      alert('Please select a Class Level for the student.')
+      setLoading(false)
+      return
+    }
 
     try {
       const { error } = await supabase
@@ -184,7 +206,7 @@ export default function StudentManagement({ institute }: StudentManagementProps)
           <p className="text-gray-600">{students.length} total students</p>
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={openAddModal}
           className="btn-primary flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
@@ -526,13 +548,29 @@ export default function StudentManagement({ institute }: StudentManagementProps)
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Enrollment Number
+                    <span className="ml-2 text-xs text-blue-600 font-normal">(auto-generated)</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData.enrollment_number}
-                    onChange={(e) => setFormData({ ...formData, enrollment_number: e.target.value })}
-                    className="input"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.enrollment_number}
+                      onChange={(e) => setFormData({ ...formData, enrollment_number: e.target.value })}
+                      className="input flex-1"
+                      placeholder="e.g. SF-2026-001"
+                    />
+                    <button
+                      type="button"
+                      onClick={regenerateEnrollment}
+                      disabled={enrollmentLoading}
+                      title="Regenerate"
+                      className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-600 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${enrollmentLoading ? 'animate-spin' : ''}`} />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Auto-generated. You can edit it if needed.
+                  </p>
                 </div>
 
                 <div>
