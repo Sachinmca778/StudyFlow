@@ -11,6 +11,7 @@ import Login from '@/components/auth/Login'
 import Onboarding from '@/components/Onboarding'
 import InstituteOnboarding from '@/components/InstituteOnboarding'
 import InstituteAdminDashboard from '@/components/InstituteAdminDashboard'
+import SuperAdminDashboard from '@/components/SuperAdminDashboard'
 import { Loader2 } from 'lucide-react'
 
 export default function Home() {
@@ -19,8 +20,9 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false)
   const [institute, setInstitute] = useState<Institute | null>(null)
   const [showInstituteOnboarding, setShowInstituteOnboarding] = useState(false)
-  const [userType, setUserType] = useState<'student' | 'institute' | null>(null)
+  const [userType, setUserType] = useState<'student' | 'institute' | 'super_admin' | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
+  const [superAdmin, setSuperAdmin] = useState<{ id: string; email: string; name: string } | null>(null)
 
   useEffect(() => {
     // Check active session on mount
@@ -42,6 +44,7 @@ export default function Home() {
         setProfile(null)
         setInstitute(null)
         setUserType(null)
+        setSuperAdmin(null)
         setShowOnboarding(false)
         setShowInstituteOnboarding(false)
         setLoadingState(false)
@@ -66,6 +69,23 @@ export default function Home() {
       // Get fresh user data including metadata
       const { data: { user } } = await supabase.auth.getUser()
       const signupMode = user?.user_metadata?.signup_mode
+
+      // ── Check super admin FIRST ──────────────────────────────────────────
+      const { data: superAdminData } = await supabase
+        .from('super_admins')
+        .select('id, email, name')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (superAdminData) {
+        setSuperAdmin(superAdminData)
+        setUserType('super_admin')
+        setLoadingState(false)
+        setLoading(false)
+        setAuthChecked(true)
+        return
+      }
 
       // Check if user has an institute
       const { data: instituteData } = await supabase
@@ -159,8 +179,13 @@ export default function Home() {
   }
 
   // ─── Not Logged In ────────────────────────────────────────────────────────────
-  if (!profile && !institute && userType === null) {
+  if (!profile && !institute && !superAdmin && userType === null) {
     return <LandingPage />
+  }
+
+  // ─── Super Admin Flow ─────────────────────────────────────────────────────────
+  if (userType === 'super_admin' && superAdmin) {
+    return <SuperAdminDashboard superAdmin={superAdmin} />
   }
 
   // ─── Institute Admin Flow ─────────────────────────────────────────────────────
