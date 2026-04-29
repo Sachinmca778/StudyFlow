@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "StudyFlow Institute",
+    "slug": "studyflow-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.studyflow.institute"
+    },
+    "android": {
+      "package": "com.studyflow.institute"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "studyflow"
+  }
+}
