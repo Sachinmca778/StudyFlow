@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, RefreshControl, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase/client';
@@ -26,15 +26,12 @@ export default function DashboardScreen() {
     totalAssignments: 0, pendingAssignments: 0,
   });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { fetchAll(); }, [institute?.id]);
 
   const fetchAll = async () => {
-    if (!institute) return;
     await Promise.all([fetchStats(), fetchRecentActivities()]);
-    setLoading(false);
     setRefreshing(false);
   };
 
@@ -96,114 +93,86 @@ export default function DashboardScreen() {
     setRecentActivities(data || []);
   };
 
-  const onRefresh = () => { setRefreshing(true); fetchAll(); };
-
-  const formatCurrency = (n: number) =>
+  const fmt = (n: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={styles.flex}>
       <ScrollView
-        className="flex-1"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} />}
+        style={styles.flex}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); fetchAll(); }}
+            colors={['#4f46e5']}
+          />
+        }
       >
         {/* Header */}
-        <View className="bg-primary-600 px-5 pt-4 pb-6">
-          <View className="flex-row items-center justify-between">
+        <View style={styles.headerBg}>
+          <View style={styles.headerRow}>
             <View>
-              <Text className="text-white/80 text-sm">Welcome back,</Text>
-              <Text className="text-white text-xl font-bold" numberOfLines={1}>
+              <Text style={styles.welcomeText}>Welcome back,</Text>
+              <Text style={styles.instituteName} numberOfLines={1}>
                 {institute?.name || 'Institute'}
               </Text>
             </View>
-            <View className="w-10 h-10 bg-white/20 rounded-full items-center justify-center">
+            <View style={styles.headerIcon}>
               <Ionicons name="school" size={22} color="#fff" />
             </View>
           </View>
-          <View className="mt-3 bg-white/10 rounded-lg px-3 py-2 flex-row items-center">
-            <Ionicons name="location-outline" size={14} color="#fff" />
-            <Text className="text-white/80 text-xs ml-1">{institute?.city}, {institute?.state}</Text>
-            <View className="ml-auto bg-white/20 px-2 py-0.5 rounded-full">
-              <Text className="text-white text-xs capitalize">{institute?.subscription_plan}</Text>
+          <View style={styles.headerMeta}>
+            <Ionicons name="location-outline" size={13} color="rgba(255,255,255,0.8)" />
+            <Text style={styles.headerMetaText}>{institute?.city}, {institute?.state}</Text>
+            <View style={styles.planBadge}>
+              <Text style={styles.planBadgeText}>{institute?.subscription_plan}</Text>
             </View>
           </View>
         </View>
 
-        <View className="px-4 -mt-3">
+        <View style={styles.body}>
           {/* Stats Row 1 */}
-          <View className="flex-row gap-3 mb-3">
-            <StatCard
-              title="Total Students"
-              value={stats.totalStudents}
-              icon="people"
-              iconBg="bg-blue-100"
-              iconColor="#3b82f6"
-              subtitle={`${stats.activeStudents} active`}
-            />
-            <StatCard
-              title="Active Batches"
-              value={stats.totalBatches}
-              icon="school"
-              iconBg="bg-purple-100"
-              iconColor="#8b5cf6"
-            />
+          <View style={styles.statsRow}>
+            <StatCard title="Total Students" value={stats.totalStudents} icon="people" iconBg="#dbeafe" iconColor="#2563eb" subtitle={`${stats.activeStudents} active`} />
+            <StatCard title="Active Batches" value={stats.totalBatches} icon="school" iconBg="#ede9fe" iconColor="#7c3aed" />
           </View>
 
           {/* Stats Row 2 */}
-          <View className="flex-row gap-3 mb-3">
-            <StatCard
-              title="Monthly Revenue"
-              value={formatCurrency(stats.monthlyRevenue)}
-              icon="cash"
-              iconBg="bg-green-100"
-              iconColor="#22c55e"
-            />
-            <StatCard
-              title="Pending Fees"
-              value={formatCurrency(stats.pendingFees)}
-              icon="alert-circle"
-              iconBg="bg-red-100"
-              iconColor="#ef4444"
-            />
+          <View style={styles.statsRow}>
+            <StatCard title="Monthly Revenue" value={fmt(stats.monthlyRevenue)} icon="cash" iconBg="#dcfce7" iconColor="#16a34a" />
+            <StatCard title="Pending Fees" value={fmt(stats.pendingFees)} icon="alert-circle" iconBg="#fee2e2" iconColor="#dc2626" />
           </View>
 
           {/* Stats Row 3 */}
-          <View className="flex-row gap-3 mb-4">
-            <StatCard
-              title="Today Present"
-              value={stats.todayAttendance}
-              icon="checkmark-circle"
-              iconBg="bg-teal-100"
-              iconColor="#14b8a6"
-            />
-            <StatCard
-              title="Assignments"
-              value={stats.totalAssignments}
-              icon="document-text"
-              iconBg="bg-orange-100"
-              iconColor="#f97316"
-              subtitle={`${stats.pendingAssignments} active`}
-            />
+          <View style={[styles.statsRow, styles.mb16]}>
+            <StatCard title="Today Present" value={stats.todayAttendance} icon="checkmark-circle" iconBg="#ccfbf1" iconColor="#0d9488" />
+            <StatCard title="Assignments" value={stats.totalAssignments} icon="document-text" iconBg="#ffedd5" iconColor="#ea580c" subtitle={`${stats.pendingAssignments} active`} />
           </View>
 
           {/* Recent Enrollments */}
-          <Card className="mb-4">
-            <Text className="text-base font-bold text-gray-900 mb-3">Recent Enrollments</Text>
+          <Card style={styles.mb16}>
+            <Text style={styles.cardTitle}>Recent Enrollments</Text>
             {recentActivities.length === 0 ? (
-              <Text className="text-gray-400 text-sm text-center py-4">No students yet</Text>
+              <Text style={styles.emptyText}>No students yet</Text>
             ) : (
               recentActivities.map((s, i) => (
-                <View key={i} className={`flex-row items-center py-2.5 ${i < recentActivities.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                  <View className="w-9 h-9 bg-primary-100 rounded-full items-center justify-center mr-3">
-                    <Text className="text-primary-600 font-bold text-sm">
+                <View
+                  key={i}
+                  style={[
+                    styles.activityRow,
+                    i < recentActivities.length - 1 && styles.activityRowBorder,
+                  ]}
+                >
+                  <View style={styles.activityAvatar}>
+                    <Text style={styles.activityAvatarText}>
                       {s.student_name?.charAt(0).toUpperCase()}
                     </Text>
                   </View>
-                  <View className="flex-1">
-                    <Text className="text-gray-900 font-medium text-sm">{s.student_name}</Text>
-                    <Text className="text-gray-400 text-xs">{s.enrollment_number}</Text>
+                  <View style={styles.activityInfo}>
+                    <Text style={styles.activityName}>{s.student_name}</Text>
+                    <Text style={styles.activitySub}>{s.enrollment_number}</Text>
                   </View>
-                  <Text className="text-gray-400 text-xs">
+                  <Text style={styles.activityDate}>
                     {new Date(s.enrollment_date).toLocaleDateString('en-IN')}
                   </Text>
                 </View>
@@ -212,22 +181,22 @@ export default function DashboardScreen() {
           </Card>
 
           {/* Quick Actions */}
-          <Card className="mb-6">
-            <Text className="text-base font-bold text-gray-900 mb-3">Quick Actions</Text>
-            <View className="flex-row flex-wrap gap-2">
+          <Card style={styles.mb16}>
+            <Text style={styles.cardTitle}>Quick Actions</Text>
+            <View style={styles.quickActionsGrid}>
               {[
                 { label: 'Add Student', icon: 'person-add', color: '#4f46e5', bg: '#eef2ff' },
-                { label: 'Mark Attendance', icon: 'checkmark-done', color: '#22c55e', bg: '#f0fdf4' },
-                { label: 'Record Fee', icon: 'cash', color: '#f59e0b', bg: '#fffbeb' },
-                { label: 'Announcement', icon: 'megaphone', color: '#ef4444', bg: '#fef2f2' },
-              ].map((action) => (
+                { label: 'Attendance', icon: 'checkmark-done', color: '#16a34a', bg: '#f0fdf4' },
+                { label: 'Record Fee', icon: 'cash', color: '#d97706', bg: '#fffbeb' },
+                { label: 'Announce', icon: 'megaphone', color: '#dc2626', bg: '#fef2f2' },
+              ].map(action => (
                 <TouchableOpacity
                   key={action.label}
-                  className="flex-row items-center px-3 py-2 rounded-lg"
-                  style={{ backgroundColor: action.bg }}
+                  style={[styles.quickAction, { backgroundColor: action.bg }]}
+                  activeOpacity={0.7}
                 >
                   <Ionicons name={action.icon as any} size={16} color={action.color} />
-                  <Text className="text-xs font-semibold ml-1.5" style={{ color: action.color }}>
+                  <Text style={[styles.quickActionText, { color: action.color }]}>
                     {action.label}
                   </Text>
                 </TouchableOpacity>
@@ -239,3 +208,48 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: '#f9fafb' },
+  headerBg: {
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24,
+  },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  welcomeText: { fontSize: 13, color: 'rgba(255,255,255,0.75)' },
+  instituteName: { fontSize: 20, fontWeight: '700', color: '#fff', marginTop: 2 },
+  headerIcon: {
+    width: 40, height: 40, backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20, alignItems: 'center', justifyContent: 'center',
+  },
+  headerMeta: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 8, marginTop: 12,
+  },
+  headerMetaText: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginLeft: 6, flex: 1 },
+  planBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  planBadgeText: { fontSize: 11, color: '#fff', fontWeight: '600', textTransform: 'capitalize' },
+  body: { padding: 16 },
+  statsRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  mb16: { marginBottom: 16 },
+  cardTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 14 },
+  emptyText: { fontSize: 13, color: '#9ca3af', textAlign: 'center', paddingVertical: 16 },
+  activityRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  activityRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f9fafb' },
+  activityAvatar: {
+    width: 36, height: 36, backgroundColor: '#eef2ff',
+    borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
+  activityAvatarText: { fontSize: 15, fontWeight: '700', color: '#4f46e5' },
+  activityInfo: { flex: 1 },
+  activityName: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  activitySub: { fontSize: 12, color: '#9ca3af', marginTop: 1 },
+  activityDate: { fontSize: 11, color: '#9ca3af' },
+  quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  quickAction: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 10, borderRadius: 10,
+  },
+  quickActionText: { fontSize: 12, fontWeight: '600', marginLeft: 6 },
+});

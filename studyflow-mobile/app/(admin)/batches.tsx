@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  Modal, ScrollView, Alert, RefreshControl, ActivityIndicator,
+  Modal, ScrollView, Alert, RefreshControl,
+  ActivityIndicator, StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,9 @@ import Badge from '@/components/ui/Badge';
 import EmptyState from '@/components/ui/EmptyState';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 
 export default function BatchesScreen() {
   const { institute } = useAuthStore();
@@ -34,7 +38,9 @@ export default function BatchesScreen() {
   const fetchBatches = async () => {
     if (!institute) return;
     const { data } = await supabase
-      .from('batches').select('*').eq('institute_id', institute.id).order('created_at', { ascending: false });
+      .from('batches').select('*')
+      .eq('institute_id', institute.id)
+      .order('created_at', { ascending: false });
     setBatches(data || []);
     setLoading(false);
     setRefreshing(false);
@@ -75,7 +81,11 @@ export default function BatchesScreen() {
       if (error) throw error;
       Alert.alert('Success', 'Batch created successfully');
       setShowModal(false);
-      setForm({ name: '', course_name: '', description: '', start_date: '', end_date: '', class_level: '', total_seats: '', fee_amount: '', schedule_time: '', teacher_name: '', schedule_days: [] });
+      setForm({
+        name: '', course_name: '', description: '', start_date: '',
+        end_date: '', class_level: '', total_seats: '', fee_amount: '',
+        schedule_time: '', teacher_name: '', schedule_days: [],
+      });
       fetchBatches();
     } catch (err: any) {
       Alert.alert('Error', err.message);
@@ -91,94 +101,101 @@ export default function BatchesScreen() {
 
   const update = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
-
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="bg-white px-4 py-3 border-b border-gray-100 flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-gray-900">Batches</Text>
-        <TouchableOpacity onPress={() => setShowModal(true)} className="bg-primary-600 px-4 py-2 rounded-lg flex-row items-center">
+    <SafeAreaView style={styles.flex}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Batches</Text>
+        <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addBtn}>
           <Ionicons name="add" size={18} color="#fff" />
-          <Text className="text-white font-semibold ml-1 text-sm">New Batch</Text>
+          <Text style={styles.addBtnText}>New Batch</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#4f46e5" />
-        </View>
+        <View style={styles.center}><ActivityIndicator size="large" color="#4f46e5" /></View>
       ) : (
         <FlatList
           data={batches}
           keyExtractor={item => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchBatches(); }} colors={['#4f46e5']} />}
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-          ListEmptyComponent={<EmptyState icon="school-outline" title="No batches yet" subtitle="Create your first batch to start enrolling students" />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchBatches(); }}
+              colors={['#4f46e5']}
+            />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <EmptyState
+              icon="school-outline"
+              title="No batches yet"
+              subtitle="Create your first batch to start enrolling students"
+            />
+          }
           renderItem={({ item }) => (
-            <View className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100">
-              <View className="flex-row items-start justify-between mb-2">
-                <View className="flex-1">
-                  <Text className="font-bold text-gray-900 text-base">{item.name}</Text>
-                  <Text className="text-primary-600 text-sm font-medium">{item.course_name}</Text>
+            <View style={styles.card}>
+              <View style={styles.cardTop}>
+                <View style={styles.cardTitleBox}>
+                  <Text style={styles.cardName}>{item.name}</Text>
+                  <Text style={styles.cardCourse}>{item.course_name}</Text>
                 </View>
                 <Badge label={item.is_active ? 'Active' : 'Inactive'} variant={item.is_active ? 'success' : 'gray'} />
               </View>
 
-              <View className="flex-row flex-wrap gap-3 mt-2">
-                <View className="flex-row items-center">
-                  <Ionicons name="people-outline" size={14} color="#9ca3af" />
-                  <Text className="text-gray-500 text-xs ml-1">{item.enrolled_students}/{item.total_seats || '∞'} students</Text>
+              <View style={styles.metaRow}>
+                <View style={styles.metaItem}>
+                  <Ionicons name="people-outline" size={13} color="#9ca3af" />
+                  <Text style={styles.metaText}>{item.enrolled_students}/{item.total_seats || '∞'} students</Text>
                 </View>
-                <View className="flex-row items-center">
-                  <Ionicons name="cash-outline" size={14} color="#9ca3af" />
-                  <Text className="text-gray-500 text-xs ml-1">{formatCurrency(item.fee_amount)}/month</Text>
+                <View style={styles.metaItem}>
+                  <Ionicons name="cash-outline" size={13} color="#9ca3af" />
+                  <Text style={styles.metaText}>{fmt(item.fee_amount)}/mo</Text>
                 </View>
                 {item.teacher_name && (
-                  <View className="flex-row items-center">
-                    <Ionicons name="person-outline" size={14} color="#9ca3af" />
-                    <Text className="text-gray-500 text-xs ml-1">{item.teacher_name}</Text>
+                  <View style={styles.metaItem}>
+                    <Ionicons name="person-outline" size={13} color="#9ca3af" />
+                    <Text style={styles.metaText}>{item.teacher_name}</Text>
                   </View>
                 )}
                 {item.schedule_time && (
-                  <View className="flex-row items-center">
-                    <Ionicons name="time-outline" size={14} color="#9ca3af" />
-                    <Text className="text-gray-500 text-xs ml-1">{item.schedule_time}</Text>
+                  <View style={styles.metaItem}>
+                    <Ionicons name="time-outline" size={13} color="#9ca3af" />
+                    <Text style={styles.metaText}>{item.schedule_time}</Text>
                   </View>
                 )}
               </View>
 
               {item.schedule_days && item.schedule_days.length > 0 && (
-                <View className="flex-row flex-wrap gap-1 mt-2">
+                <View style={styles.daysRow}>
                   {item.schedule_days.map(d => (
-                    <View key={d} className="bg-primary-50 px-2 py-0.5 rounded">
-                      <Text className="text-primary-600 text-xs font-medium">{d}</Text>
+                    <View key={d} style={styles.dayPill}>
+                      <Text style={styles.dayText}>{d}</Text>
                     </View>
                   ))}
                 </View>
               )}
 
-              {/* Enrollment progress */}
-              {item.total_seats && (
-                <View className="mt-3">
-                  <View className="flex-row justify-between mb-1">
-                    <Text className="text-xs text-gray-400">Enrollment</Text>
-                    <Text className="text-xs text-gray-500">{Math.round((item.enrolled_students / item.total_seats) * 100)}%</Text>
-                  </View>
-                  <View className="h-1.5 bg-gray-100 rounded-full">
+              {item.total_seats ? (
+                <View style={styles.progressBox}>
+                  <View style={styles.progressBg}>
                     <View
-                      className="h-1.5 bg-primary-500 rounded-full"
-                      style={{ width: `${Math.min((item.enrolled_students / item.total_seats) * 100, 100)}%` }}
+                      style={[
+                        styles.progressFill,
+                        { width: `${Math.min((item.enrolled_students / item.total_seats) * 100, 100)}%` },
+                      ]}
                     />
                   </View>
+                  <Text style={styles.progressText}>
+                    {Math.round((item.enrolled_students / item.total_seats) * 100)}% enrolled
+                  </Text>
                 </View>
-              )}
+              ) : null}
 
               <TouchableOpacity
                 onPress={() => handleToggleActive(item)}
-                className={`mt-3 py-2 rounded-lg items-center ${item.is_active ? 'bg-gray-100' : 'bg-primary-50'}`}
+                style={[styles.toggleBtn, item.is_active ? styles.toggleBtnGray : styles.toggleBtnPrimary]}
               >
-                <Text className={`text-xs font-semibold ${item.is_active ? 'text-gray-600' : 'text-primary-600'}`}>
+                <Text style={[styles.toggleBtnText, item.is_active ? styles.toggleBtnTextGray : styles.toggleBtnTextPrimary]}>
                   {item.is_active ? 'Deactivate' : 'Activate'}
                 </Text>
               </TouchableOpacity>
@@ -189,14 +206,14 @@ export default function BatchesScreen() {
 
       {/* Add Batch Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-            <Text className="text-lg font-bold text-gray-900">Create Batch</Text>
-            <TouchableOpacity onPress={() => setShowModal(false)}>
+        <SafeAreaView style={styles.flex}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Create Batch</Text>
+            <TouchableOpacity onPress={() => setShowModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="close" size={24} color="#374151" />
             </TouchableOpacity>
           </View>
-          <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled">
+          <ScrollView style={styles.flex} contentContainerStyle={styles.modalContent} keyboardShouldPersistTaps="handled">
             <Input label="Batch Name" value={form.name} onChangeText={v => update('name', v)} placeholder="e.g. Morning Batch A" required />
             <Input label="Course Name" value={form.course_name} onChangeText={v => update('course_name', v)} placeholder="e.g. Mathematics" required />
             <Input label="Description" value={form.description} onChangeText={v => update('description', v)} placeholder="Optional description" multiline numberOfLines={2} />
@@ -209,25 +226,88 @@ export default function BatchesScreen() {
             <Input label="Teacher Name" value={form.teacher_name} onChangeText={v => update('teacher_name', v)} placeholder="Assigned teacher" />
 
             {/* Schedule Days */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-2">Schedule Days</Text>
-              <View className="flex-row flex-wrap gap-2">
+            <View style={styles.mb16}>
+              <Text style={styles.fieldLabel}>Schedule Days</Text>
+              <View style={styles.daysGrid}>
                 {DAYS.map(d => (
                   <TouchableOpacity
                     key={d}
                     onPress={() => toggleDay(d)}
-                    className={`px-4 py-2 rounded-lg border ${form.schedule_days.includes(d) ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-200'}`}
+                    style={[styles.daySelectBtn, form.schedule_days.includes(d) && styles.daySelectBtnActive]}
                   >
-                    <Text className={`text-sm font-medium ${form.schedule_days.includes(d) ? 'text-white' : 'text-gray-600'}`}>{d}</Text>
+                    <Text style={[styles.daySelectText, form.schedule_days.includes(d) && styles.daySelectTextActive]}>
+                      {d}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <Button title="Create Batch" onPress={handleSave} loading={saving} className="mb-8" />
+            <Button title="Create Batch" onPress={handleSave} loading={saving} />
           </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: '#f9fafb' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  addBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#4f46e5', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+  },
+  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14, marginLeft: 4 },
+  listContent: { padding: 16, paddingBottom: 32 },
+  card: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    borderWidth: 1, borderColor: '#f3f4f6',
+  },
+  cardTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 },
+  cardTitleBox: { flex: 1, marginRight: 8 },
+  cardName: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  cardCourse: { fontSize: 13, color: '#4f46e5', fontWeight: '500', marginTop: 2 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8 },
+  metaItem: { flexDirection: 'row', alignItems: 'center' },
+  metaText: { fontSize: 12, color: '#6b7280', marginLeft: 4 },
+  daysRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 },
+  dayPill: { backgroundColor: '#eef2ff', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  dayText: { fontSize: 11, color: '#4f46e5', fontWeight: '600' },
+  progressBox: { marginBottom: 10 },
+  progressBg: { height: 6, backgroundColor: '#f3f4f6', borderRadius: 3, marginBottom: 4 },
+  progressFill: { height: 6, backgroundColor: '#4f46e5', borderRadius: 3 },
+  progressText: { fontSize: 11, color: '#9ca3af' },
+  toggleBtn: { paddingVertical: 10, borderRadius: 10, alignItems: 'center', marginTop: 4 },
+  toggleBtnGray: { backgroundColor: '#f3f4f6' },
+  toggleBtnPrimary: { backgroundColor: '#eef2ff' },
+  toggleBtnText: { fontSize: 13, fontWeight: '600' },
+  toggleBtnTextGray: { color: '#4b5563' },
+  toggleBtnTextPrimary: { color: '#4f46e5' },
+  // Modal
+  modalHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#fff',
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  modalContent: { padding: 16, paddingBottom: 40 },
+  mb16: { marginBottom: 16 },
+  fieldLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8 },
+  daysGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  daySelectBtn: {
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10,
+    borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff',
+  },
+  daySelectBtnActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
+  daySelectText: { fontSize: 13, fontWeight: '600', color: '#4b5563' },
+  daySelectTextActive: { color: '#fff' },
+});

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  KeyboardAvoidingView, Platform, Alert,
+  KeyboardAvoidingView, Platform, Alert, StyleSheet,
 } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase/client';
@@ -33,7 +33,6 @@ export default function LoginScreen() {
           password,
         });
         if (error) throw error;
-        // Check if institute exists
         const { data: inst } = await supabase
           .from('institutes')
           .select('id')
@@ -51,30 +50,32 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1 }}
+        style={styles.flex}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View className="bg-primary-600 px-6 pt-16 pb-12 items-center">
-          <View className="w-16 h-16 bg-white/20 rounded-2xl items-center justify-center mb-4">
+        <View style={styles.headerBg}>
+          <View style={styles.iconCircle}>
             <Ionicons name="school" size={36} color="#fff" />
           </View>
-          <Text className="text-3xl font-bold text-white">StudyFlow</Text>
-          <Text className="text-primary-100 mt-1">Institute Management</Text>
+          <Text style={styles.appName}>StudyFlow</Text>
+          <Text style={styles.appSub}>Institute Management</Text>
         </View>
 
         {/* Form */}
-        <View className="flex-1 px-6 pt-8">
-          <Text className="text-2xl font-bold text-gray-900 mb-2">
+        <View style={styles.formBox}>
+          <Text style={styles.heading}>
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </Text>
-          <Text className="text-gray-500 mb-8">
-            {isSignUp ? 'Register your institute admin account' : 'Sign in to manage your institute'}
+          <Text style={styles.subheading}>
+            {isSignUp
+              ? 'Register your institute admin account'
+              : 'Sign in to manage your institute'}
           </Text>
 
           <Input
@@ -88,27 +89,28 @@ export default function LoginScreen() {
             required
           />
 
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-gray-700 mb-1">
-              Password <Text className="text-red-500">*</Text>
+          {/* Password field */}
+          <View style={styles.mb16}>
+            <Text style={styles.label}>
+              Password <Text style={styles.required}>*</Text>
             </Text>
-            <View className="flex-row items-center border border-gray-300 rounded-lg bg-white">
+            <View style={styles.passwordRow}>
               <Input
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter password"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                className="flex-1 border-0 mb-0"
-                style={{ flex: 1, borderWidth: 0, marginBottom: 0 }}
+                style={styles.passwordInput}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                className="px-4"
+                style={styles.eyeBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
+                  size={22}
                   color="#9ca3af"
                 />
               </TouchableOpacity>
@@ -119,16 +121,15 @@ export default function LoginScreen() {
             title={isSignUp ? 'Create Account' : 'Sign In'}
             onPress={handleAuth}
             loading={loading}
-            className="mt-2"
           />
 
           <TouchableOpacity
             onPress={() => setIsSignUp(!isSignUp)}
-            className="mt-6 items-center"
+            style={styles.switchRow}
           >
-            <Text className="text-gray-500">
+            <Text style={styles.switchText}>
               {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-              <Text className="text-primary-600 font-semibold">
+              <Text style={styles.switchLink}>
                 {isSignUp ? 'Sign In' : 'Sign Up'}
               </Text>
             </Text>
@@ -138,3 +139,38 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: '#fff' },
+  scrollContent: { flexGrow: 1 },
+  headerBg: {
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 24,
+    paddingTop: 72,
+    paddingBottom: 48,
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 72,
+    height: 72,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  appName: { fontSize: 28, fontWeight: '700', color: '#fff' },
+  appSub: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  formBox: { flex: 1, paddingHorizontal: 24, paddingTop: 32 },
+  heading: { fontSize: 24, fontWeight: '700', color: '#111827', marginBottom: 6 },
+  subheading: { fontSize: 14, color: '#6b7280', marginBottom: 28 },
+  mb16: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 },
+  required: { color: '#ef4444' },
+  passwordRow: { flexDirection: 'row', alignItems: 'center' },
+  passwordInput: { flex: 1, marginBottom: 0 },
+  eyeBtn: { paddingHorizontal: 12, paddingVertical: 12 },
+  switchRow: { marginTop: 24, alignItems: 'center', paddingBottom: 32 },
+  switchText: { fontSize: 14, color: '#6b7280' },
+  switchLink: { color: '#4f46e5', fontWeight: '600' },
+});

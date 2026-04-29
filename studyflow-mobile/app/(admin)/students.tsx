@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput,
   Modal, ScrollView, Alert, RefreshControl, ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,10 +15,17 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import EmptyState from '@/components/ui/EmptyState';
 
-const CLASS_LEVELS = ['Class 1','Class 2','Class 3','Class 4','Class 5','Class 6','Class 7','Class 8','Class 9','Class 10','Class 11','Class 12','Nursery','KG','LKG','UKG'];
+const CLASS_LEVELS = [
+  'Nursery','KG','LKG','UKG',
+  'Class 1','Class 2','Class 3','Class 4','Class 5',
+  'Class 6','Class 7','Class 8','Class 9','Class 10',
+  'Class 11','Class 12',
+];
 
-const statusBadge = (s: string) => {
-  const map: Record<string, any> = { active: 'success', inactive: 'gray', suspended: 'danger', graduated: 'info' };
+const statusBadge = (s: string): any => {
+  const map: Record<string, any> = {
+    active: 'success', inactive: 'gray', suspended: 'danger', graduated: 'info',
+  };
   return map[s] || 'gray';
 };
 
@@ -44,8 +52,10 @@ export default function StudentsScreen() {
   const fetchAll = async () => {
     if (!institute) return;
     const [{ data: s }, { data: b }] = await Promise.all([
-      supabase.from('institute_students').select('*').eq('institute_id', institute.id).order('created_at', { ascending: false }),
-      supabase.from('batches').select('*').eq('institute_id', institute.id).eq('is_active', true),
+      supabase.from('institute_students').select('*')
+        .eq('institute_id', institute.id).order('created_at', { ascending: false }),
+      supabase.from('batches').select('*')
+        .eq('institute_id', institute.id).eq('is_active', true),
     ]);
     setStudents(s || []);
     setBatches(b || []);
@@ -90,7 +100,11 @@ export default function StudentsScreen() {
       if (error) throw error;
       Alert.alert('Success', 'Student added successfully');
       setShowModal(false);
-      setForm({ student_name: '', email: '', phone: '', parent_name: '', parent_phone: '', date_of_birth: '', gender: 'male', address: '', enrollment_number: '', class_level: '', batch_id: '' });
+      setForm({
+        student_name: '', email: '', phone: '', parent_name: '',
+        parent_phone: '', date_of_birth: '', gender: 'male',
+        address: '', enrollment_number: '', class_level: '', batch_id: '',
+      });
       fetchAll();
     } catch (err: any) {
       Alert.alert('Error', err.message);
@@ -113,8 +127,10 @@ export default function StudentsScreen() {
   };
 
   const filtered = students.filter(s => {
-    const matchSearch = s.student_name.toLowerCase().includes(search.toLowerCase()) ||
-      s.phone.includes(search) || (s.enrollment_number || '').includes(search);
+    const matchSearch =
+      s.student_name.toLowerCase().includes(search.toLowerCase()) ||
+      s.phone.includes(search) ||
+      (s.enrollment_number || '').includes(search);
     const matchStatus = filterStatus === 'all' || s.status === filterStatus;
     return matchSearch && matchStatus;
   });
@@ -122,21 +138,22 @@ export default function StudentsScreen() {
   const update = (k: string, v: string) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={styles.flex}>
       {/* Header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-100">
-        <View className="flex-row items-center justify-between mb-3">
-          <Text className="text-xl font-bold text-gray-900">Students</Text>
-          <TouchableOpacity onPress={openAddModal} className="bg-primary-600 px-4 py-2 rounded-lg flex-row items-center">
-            <Ionicons name="add" size={18} color="#fff" />
-            <Text className="text-white font-semibold ml-1 text-sm">Add</Text>
-          </TouchableOpacity>
-        </View>
-        {/* Search */}
-        <View className="flex-row items-center bg-gray-100 rounded-lg px-3 py-2 mb-3">
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Students</Text>
+        <TouchableOpacity onPress={openAddModal} style={styles.addBtn}>
+          <Ionicons name="add" size={18} color="#fff" />
+          <Text style={styles.addBtnText}>Add</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Search */}
+      <View style={styles.searchBox}>
+        <View style={styles.searchRow}>
           <Ionicons name="search" size={16} color="#9ca3af" />
           <TextInput
-            className="flex-1 ml-2 text-gray-900 text-sm"
+            style={styles.searchInput}
             placeholder="Search by name, phone, enrollment..."
             value={search}
             onChangeText={setSearch}
@@ -144,73 +161,87 @@ export default function StudentsScreen() {
           />
         </View>
         {/* Filter chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipScroll}>
           {['all', 'active', 'inactive', 'suspended', 'graduated'].map(s => (
             <TouchableOpacity
               key={s}
               onPress={() => setFilterStatus(s)}
-              className={`mr-2 px-3 py-1.5 rounded-full ${filterStatus === s ? 'bg-primary-600' : 'bg-gray-100'}`}
+              style={[styles.chip, filterStatus === s && styles.chipActive]}
             >
-              <Text className={`text-xs font-medium capitalize ${filterStatus === s ? 'text-white' : 'text-gray-600'}`}>{s}</Text>
+              <Text style={[styles.chipText, filterStatus === s && styles.chipTextActive]}>
+                {s}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
       </View>
 
       {loading ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={styles.center}>
           <ActivityIndicator size="large" color="#4f46e5" />
         </View>
       ) : (
         <FlatList
           data={filtered}
           keyExtractor={item => item.id}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchAll(); }} colors={['#4f46e5']} />}
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-          ListEmptyComponent={<EmptyState icon="people-outline" title="No students found" subtitle="Add your first student to get started" />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); fetchAll(); }}
+              colors={['#4f46e5']}
+            />
+          }
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <EmptyState
+              icon="people-outline"
+              title="No students found"
+              subtitle="Add your first student to get started"
+            />
+          }
           renderItem={({ item }) => (
-            <View className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100">
-              <View className="flex-row items-start justify-between">
-                <View className="flex-row items-center flex-1">
-                  <View className="w-11 h-11 bg-primary-100 rounded-full items-center justify-center mr-3">
-                    <Text className="text-primary-600 font-bold text-base">
-                      {item.student_name.charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-semibold text-gray-900">{item.student_name}</Text>
-                    <Text className="text-gray-500 text-xs mt-0.5">{item.enrollment_number || 'No enrollment #'}</Text>
-                  </View>
+            <View style={styles.card}>
+              <View style={styles.cardRow}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {item.student_name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardName}>{item.student_name}</Text>
+                  <Text style={styles.cardSub}>
+                    {item.enrollment_number || 'No enrollment #'}
+                  </Text>
                 </View>
                 <Badge label={item.status} variant={statusBadge(item.status)} />
               </View>
-              <View className="mt-3 flex-row flex-wrap gap-3">
-                <View className="flex-row items-center">
+
+              <View style={styles.metaRow}>
+                <View style={styles.metaItem}>
                   <Ionicons name="call-outline" size={13} color="#9ca3af" />
-                  <Text className="text-gray-500 text-xs ml-1">{item.phone}</Text>
+                  <Text style={styles.metaText}>{item.phone}</Text>
                 </View>
                 {item.class_level && (
-                  <View className="flex-row items-center">
+                  <View style={styles.metaItem}>
                     <Ionicons name="school-outline" size={13} color="#9ca3af" />
-                    <Text className="text-gray-500 text-xs ml-1">{item.class_level}</Text>
+                    <Text style={styles.metaText}>{item.class_level}</Text>
                   </View>
                 )}
                 {item.parent_name && (
-                  <View className="flex-row items-center">
+                  <View style={styles.metaItem}>
                     <Ionicons name="person-outline" size={13} color="#9ca3af" />
-                    <Text className="text-gray-500 text-xs ml-1">{item.parent_name}</Text>
+                    <Text style={styles.metaText}>{item.parent_name}</Text>
                   </View>
                 )}
               </View>
-              <View className="mt-3 flex-row justify-end gap-2">
-                <TouchableOpacity
-                  onPress={() => handleDelete(item.id, item.student_name)}
-                  className="flex-row items-center px-3 py-1.5 bg-red-50 rounded-lg"
-                >
-                  <Ionicons name="trash-outline" size={14} color="#ef4444" />
-                  <Text className="text-red-500 text-xs ml-1 font-medium">Remove</Text>
-                </TouchableOpacity>
-              </View>
+
+              <TouchableOpacity
+                onPress={() => handleDelete(item.id, item.student_name)}
+                style={styles.deleteBtn}
+              >
+                <Ionicons name="trash-outline" size={14} color="#ef4444" />
+                <Text style={styles.deleteBtnText}>Remove</Text>
+              </TouchableOpacity>
             </View>
           )}
         />
@@ -218,41 +249,47 @@ export default function StudentsScreen() {
 
       {/* Add Student Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="flex-row items-center justify-between px-4 py-3 border-b border-gray-100">
-            <Text className="text-lg font-bold text-gray-900">Add Student</Text>
-            <TouchableOpacity onPress={() => setShowModal(false)}>
+        <SafeAreaView style={styles.flex}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Student</Text>
+            <TouchableOpacity onPress={() => setShowModal(false)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <Ionicons name="close" size={24} color="#374151" />
             </TouchableOpacity>
           </View>
-          <ScrollView className="flex-1 px-4 pt-4" keyboardShouldPersistTaps="handled">
+
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.modalContent}
+            keyboardShouldPersistTaps="handled"
+          >
             <Input label="Full Name" value={form.student_name} onChangeText={v => update('student_name', v)} placeholder="Student full name" required />
             <Input label="Phone" value={form.phone} onChangeText={v => update('phone', v)} placeholder="+91 9876543210" keyboardType="phone-pad" required />
             <Input label="Email" value={form.email} onChangeText={v => update('email', v)} placeholder="student@email.com" keyboardType="email-address" autoCapitalize="none" />
 
             {/* Enrollment Number */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1">Enrollment Number</Text>
-              <View className="flex-row items-center border border-gray-300 rounded-lg bg-gray-50 px-4 py-3">
-                {enrollmentLoading ? (
-                  <ActivityIndicator size="small" color="#4f46e5" />
-                ) : (
-                  <Text className="text-gray-700 flex-1">{form.enrollment_number}</Text>
-                )}
+            <View style={styles.mb16}>
+              <Text style={styles.fieldLabel}>Enrollment Number</Text>
+              <View style={styles.enrollBox}>
+                {enrollmentLoading
+                  ? <ActivityIndicator size="small" color="#4f46e5" />
+                  : <Text style={styles.enrollText}>{form.enrollment_number}</Text>
+                }
               </View>
             </View>
 
             {/* Class Level */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1">Class Level</Text>
+            <View style={styles.mb16}>
+              <Text style={styles.fieldLabel}>Class Level</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 {CLASS_LEVELS.map(c => (
                   <TouchableOpacity
                     key={c}
                     onPress={() => update('class_level', c)}
-                    className={`mr-2 px-3 py-2 rounded-lg border ${form.class_level === c ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-200'}`}
+                    style={[styles.pill, form.class_level === c && styles.pillActive]}
                   >
-                    <Text className={`text-xs font-medium ${form.class_level === c ? 'text-white' : 'text-gray-600'}`}>{c}</Text>
+                    <Text style={[styles.pillText, form.class_level === c && styles.pillTextActive]}>
+                      {c}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
@@ -260,22 +297,24 @@ export default function StudentsScreen() {
 
             {/* Batch */}
             {batches.length > 0 && (
-              <View className="mb-4">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Assign Batch</Text>
+              <View style={styles.mb16}>
+                <Text style={styles.fieldLabel}>Assign Batch</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                   <TouchableOpacity
                     onPress={() => update('batch_id', '')}
-                    className={`mr-2 px-3 py-2 rounded-lg border ${!form.batch_id ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-200'}`}
+                    style={[styles.pill, !form.batch_id && styles.pillActive]}
                   >
-                    <Text className={`text-xs font-medium ${!form.batch_id ? 'text-white' : 'text-gray-600'}`}>None</Text>
+                    <Text style={[styles.pillText, !form.batch_id && styles.pillTextActive]}>None</Text>
                   </TouchableOpacity>
                   {batches.map(b => (
                     <TouchableOpacity
                       key={b.id}
                       onPress={() => update('batch_id', b.id)}
-                      className={`mr-2 px-3 py-2 rounded-lg border ${form.batch_id === b.id ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-200'}`}
+                      style={[styles.pill, form.batch_id === b.id && styles.pillActive]}
                     >
-                      <Text className={`text-xs font-medium ${form.batch_id === b.id ? 'text-white' : 'text-gray-600'}`}>{b.name}</Text>
+                      <Text style={[styles.pillText, form.batch_id === b.id && styles.pillTextActive]}>
+                        {b.name}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -288,25 +327,116 @@ export default function StudentsScreen() {
             <Input label="Address" value={form.address} onChangeText={v => update('address', v)} placeholder="Full address" multiline numberOfLines={2} />
 
             {/* Gender */}
-            <View className="mb-4">
-              <Text className="text-sm font-medium text-gray-700 mb-1">Gender</Text>
-              <View className="flex-row gap-2">
+            <View style={styles.mb16}>
+              <Text style={styles.fieldLabel}>Gender</Text>
+              <View style={styles.genderRow}>
                 {['male', 'female', 'other'].map(g => (
                   <TouchableOpacity
                     key={g}
                     onPress={() => update('gender', g)}
-                    className={`flex-1 py-2.5 rounded-lg border items-center ${form.gender === g ? 'bg-primary-600 border-primary-600' : 'bg-white border-gray-200'}`}
+                    style={[styles.genderBtn, form.gender === g && styles.genderBtnActive]}
                   >
-                    <Text className={`text-sm font-medium capitalize ${form.gender === g ? 'text-white' : 'text-gray-600'}`}>{g}</Text>
+                    <Text style={[styles.genderText, form.gender === g && styles.genderTextActive]}>
+                      {g.charAt(0).toUpperCase() + g.slice(1)}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
 
-            <Button title="Add Student" onPress={handleSave} loading={saving} className="mb-8" />
+            <Button title="Add Student" onPress={handleSave} loading={saving} />
           </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: '#f9fafb' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  addBtn: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#4f46e5', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+  },
+  addBtnText: { color: '#fff', fontWeight: '600', fontSize: 14, marginLeft: 4 },
+  searchBox: {
+    backgroundColor: '#fff', paddingHorizontal: 16, paddingTop: 12,
+    paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#f3f4f6', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    marginBottom: 10,
+  },
+  searchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: '#111827' },
+  chipScroll: { marginBottom: 4 },
+  chip: {
+    marginRight: 8, paddingHorizontal: 14, paddingVertical: 6,
+    borderRadius: 999, backgroundColor: '#f3f4f6',
+  },
+  chipActive: { backgroundColor: '#4f46e5' },
+  chipText: { fontSize: 12, fontWeight: '600', color: '#4b5563', textTransform: 'capitalize' },
+  chipTextActive: { color: '#fff' },
+  listContent: { padding: 16, paddingBottom: 32 },
+  card: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    borderWidth: 1, borderColor: '#f3f4f6',
+  },
+  cardRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  avatar: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#eef2ff', alignItems: 'center', justifyContent: 'center', marginRight: 12,
+  },
+  avatarText: { fontSize: 18, fontWeight: '700', color: '#4f46e5' },
+  cardInfo: { flex: 1 },
+  cardName: { fontSize: 15, fontWeight: '600', color: '#111827' },
+  cardSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 10 },
+  metaItem: { flexDirection: 'row', alignItems: 'center' },
+  metaText: { fontSize: 12, color: '#6b7280', marginLeft: 4 },
+  deleteBtn: {
+    flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-end',
+    backgroundColor: '#fef2f2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
+  },
+  deleteBtnText: { color: '#ef4444', fontSize: 12, fontWeight: '600', marginLeft: 4 },
+  // Modal
+  modalHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#fff',
+  },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  modalContent: { padding: 16, paddingBottom: 40 },
+  mb16: { marginBottom: 16 },
+  fieldLabel: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 8 },
+  enrollBox: {
+    borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10,
+    paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#f9fafb',
+    minHeight: 48, justifyContent: 'center',
+  },
+  enrollText: { fontSize: 15, color: '#374151' },
+  pill: {
+    marginRight: 8, paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 10, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff',
+  },
+  pillActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
+  pillText: { fontSize: 13, fontWeight: '500', color: '#4b5563' },
+  pillTextActive: { color: '#fff' },
+  genderRow: { flexDirection: 'row', gap: 10 },
+  genderBtn: {
+    flex: 1, paddingVertical: 12, borderRadius: 10,
+    borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', backgroundColor: '#fff',
+  },
+  genderBtnActive: { backgroundColor: '#4f46e5', borderColor: '#4f46e5' },
+  genderText: { fontSize: 14, fontWeight: '500', color: '#4b5563' },
+  genderTextActive: { color: '#fff' },
+});

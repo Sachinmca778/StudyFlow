@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, ScrollView, Alert,
-  KeyboardAvoidingView, Platform,
+  KeyboardAvoidingView, Platform, StyleSheet,
 } from 'react-native';
 import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase/client';
@@ -16,18 +16,12 @@ export default function OnboardingScreen() {
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    registration_number: '',
-    established_year: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
+    name: '', email: '', phone: '', registration_number: '',
+    established_year: '', address: '', city: '', state: '', pincode: '',
   });
 
-  const update = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
+  const update = (key: string, val: string) =>
+    setForm(prev => ({ ...prev, [key]: val }));
 
   const handleNext = () => {
     if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
@@ -77,42 +71,56 @@ export default function OnboardingScreen() {
 
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-white"
+      style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.flex}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Header */}
-        <View className="bg-primary-600 px-6 pt-14 pb-8">
+        <View style={styles.headerBg}>
           <Ionicons name="school" size={32} color="#fff" />
-          <Text className="text-2xl font-bold text-white mt-3">Setup Your Institute</Text>
-          <Text className="text-primary-100 mt-1">Step {step} of 2</Text>
+          <Text style={styles.heading}>Setup Your Institute</Text>
+          <Text style={styles.stepText}>Step {step} of 2</Text>
           {/* Progress bar */}
-          <View className="mt-4 h-1.5 bg-white/30 rounded-full">
-            <View className={`h-1.5 bg-white rounded-full ${step === 1 ? 'w-1/2' : 'w-full'}`} />
+          <View style={styles.progressBg}>
+            <View style={[styles.progressFill, { width: step === 1 ? '50%' : '100%' }]} />
           </View>
         </View>
 
-        <View className="flex-1 px-6 pt-6">
+        <View style={styles.formBox}>
           {step === 1 ? (
             <>
-              <Text className="text-lg font-bold text-gray-900 mb-4">Basic Information</Text>
+              <Text style={styles.sectionTitle}>Basic Information</Text>
               <Input label="Institute Name" value={form.name} onChangeText={v => update('name', v)} placeholder="e.g. Bright Future Academy" required />
               <Input label="Email" value={form.email} onChangeText={v => update('email', v)} placeholder="institute@email.com" keyboardType="email-address" autoCapitalize="none" required />
               <Input label="Phone" value={form.phone} onChangeText={v => update('phone', v)} placeholder="+91 9876543210" keyboardType="phone-pad" required />
               <Input label="Registration Number" value={form.registration_number} onChangeText={v => update('registration_number', v)} placeholder="Optional" />
               <Input label="Established Year" value={form.established_year} onChangeText={v => update('established_year', v)} placeholder="e.g. 2010" keyboardType="numeric" />
-              <Button title="Next →" onPress={handleNext} className="mt-2" />
+              <Button title="Next →" onPress={handleNext} />
             </>
           ) : (
             <>
-              <Text className="text-lg font-bold text-gray-900 mb-4">Address Details</Text>
+              <Text style={styles.sectionTitle}>Address Details</Text>
               <Input label="Address" value={form.address} onChangeText={v => update('address', v)} placeholder="Street address" multiline numberOfLines={2} />
               <Input label="City" value={form.city} onChangeText={v => update('city', v)} placeholder="e.g. Mumbai" required />
               <Input label="State" value={form.state} onChangeText={v => update('state', v)} placeholder="e.g. Maharashtra" required />
               <Input label="Pincode" value={form.pincode} onChangeText={v => update('pincode', v)} placeholder="e.g. 400001" keyboardType="numeric" />
-              <View className="flex-row gap-3 mt-2">
-                <Button title="← Back" variant="outline" onPress={() => setStep(1)} className="flex-1" />
-                <Button title="Create Institute" onPress={handleSubmit} loading={loading} className="flex-1" />
+              <View style={styles.btnRow}>
+                <Button
+                  title="← Back"
+                  variant="outline"
+                  onPress={() => setStep(1)}
+                  style={styles.halfBtn}
+                />
+                <Button
+                  title="Create Institute"
+                  onPress={handleSubmit}
+                  loading={loading}
+                  style={styles.halfBtn}
+                />
               </View>
             </>
           )}
@@ -121,3 +129,36 @@ export default function OnboardingScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: '#fff' },
+  scrollContent: { flexGrow: 1, paddingBottom: 40 },
+  headerBg: {
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 32,
+  },
+  heading: { fontSize: 24, fontWeight: '700', color: '#fff', marginTop: 12 },
+  stepText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', marginTop: 4 },
+  progressBg: {
+    marginTop: 16,
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
+  },
+  progressFill: {
+    height: 6,
+    backgroundColor: '#fff',
+    borderRadius: 3,
+  },
+  formBox: { paddingHorizontal: 24, paddingTop: 24 },
+  sectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 20,
+  },
+  btnRow: { flexDirection: 'row', gap: 12 },
+  halfBtn: { flex: 1 },
+});
