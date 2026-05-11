@@ -171,10 +171,43 @@ export default function Home() {
   // ─── Loading State ───────────────────────────────────────────────────────────
   if (loading || !authChecked) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-accent-50">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-primary-600 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Loading...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-4 animate-fade-in">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
+            <Loader2 className="w-8 h-8 text-white animate-spin" />
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              StudyFlow
+            </h1>
+            <p className="text-gray-400 text-sm mt-1">Loading your workspace...</p>
+          </div>
+        </div>
+
+        {/* Skeleton preview — gives a sense of the layout loading */}
+        <div className="mt-12 w-full max-w-4xl px-6 animate-pulse">
+          <div className="flex gap-4">
+            {/* Sidebar skeleton */}
+            <div className="hidden lg:flex flex-col gap-3 w-56 flex-shrink-0">
+              <div className="h-10 bg-gray-200 rounded-xl" />
+              <div className="h-10 bg-gray-200 rounded-xl opacity-80" />
+              <div className="h-10 bg-gray-200 rounded-xl opacity-60" />
+              <div className="h-10 bg-gray-200 rounded-xl opacity-40" />
+              <div className="h-10 bg-gray-200 rounded-xl opacity-30" />
+            </div>
+            {/* Content skeleton */}
+            <div className="flex-1 flex flex-col gap-4">
+              <div className="h-8 bg-gray-200 rounded-xl w-1/3" />
+              <div className="grid grid-cols-3 gap-3">
+                <div className="h-24 bg-gray-200 rounded-xl" />
+                <div className="h-24 bg-gray-200 rounded-xl opacity-80" />
+                <div className="h-24 bg-gray-200 rounded-xl opacity-60" />
+              </div>
+              <div className="h-40 bg-gray-200 rounded-xl opacity-70" />
+              <div className="h-24 bg-gray-200 rounded-xl opacity-50" />
+            </div>
+          </div>
         </div>
       </div>
     )
