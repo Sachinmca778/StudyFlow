@@ -28,8 +28,18 @@ type InstituteAdminDashboardProps = {
 }
 
 export default function InstituteAdminDashboard({ userId, institute }: InstituteAdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('institute_active_tab') || 'overview'
+    }
+    return 'overview'
+  })
   const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId)
+    localStorage.setItem('institute_active_tab', tabId)
+  }
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
@@ -81,7 +91,7 @@ export default function InstituteAdminDashboard({ userId, institute }: Institute
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'

@@ -27,8 +27,19 @@ import SettingsPage from './dashboard/Settings'
 
 export default function Dashboard() {
   const { profile, signOut } = useAuthStore()
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('student_active_tab') || 'dashboard'
+    }
+    return 'dashboard'
+  })
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId)
+    localStorage.setItem('student_active_tab', tabId)
+    setSidebarOpen(false)
+  }
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'blue' },
@@ -140,10 +151,7 @@ export default function Dashboard() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id)
-                    setSidebarOpen(false)
-                  }}
+                  onClick={() => handleTabChange(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
                       ? `bg-gradient-to-r ${getGradient(item.color)} text-white shadow-lg`
