@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Building2, Mail, Phone, MapPin, Calendar } from 'lucide-react'
+import { Building2, Mail, Phone, MapPin, Calendar, LogOut } from 'lucide-react'
 
 type InstituteOnboardingProps = {
   userId: string
@@ -12,6 +12,13 @@ type InstituteOnboardingProps = {
 export default function InstituteOnboarding({ userId, onComplete }: InstituteOnboardingProps) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
   
   const [formData, setFormData] = useState({
     name: '',
@@ -51,6 +58,18 @@ export default function InstituteOnboarding({ userId, onComplete }: InstituteOnb
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+        {/* Logout button */}
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-red-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+          >
+            <LogOut className="w-4 h-4" />
+            {loggingOut ? 'Logging out...' : 'Logout'}
+          </button>
+        </div>
+
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
             <Building2 className="w-8 h-8 text-white" />

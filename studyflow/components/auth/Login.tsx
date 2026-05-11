@@ -92,7 +92,7 @@ export default function Login({ onClose, mode = 'student' }: LoginProps) {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: `${window.location.origin}/auth/reset-password`,
       })
       if (error) throw error
       setForgotSuccess(true)

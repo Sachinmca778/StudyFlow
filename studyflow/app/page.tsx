@@ -7,7 +7,6 @@ import { Profile } from '@/lib/types'
 import { Institute } from '@/lib/institute-types'
 import LandingPage from '@/components/NewLandingPage'
 import Dashboard from '@/components/Dashboard'
-import Login from '@/components/auth/Login'
 import Onboarding from '@/components/Onboarding'
 import InstituteOnboarding from '@/components/InstituteOnboarding'
 import InstituteAdminDashboard from '@/components/InstituteAdminDashboard'
@@ -21,6 +20,7 @@ export default function Home() {
   const [institute, setInstitute] = useState<Institute | null>(null)
   const [showInstituteOnboarding, setShowInstituteOnboarding] = useState(false)
   const [userType, setUserType] = useState<'student' | 'institute' | 'super_admin' | null>(null)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [superAdmin, setSuperAdmin] = useState<{ id: string; email: string; name: string } | null>(null)
 
@@ -99,6 +99,7 @@ export default function Home() {
         setInstitute(instituteData as Institute)
         setUserType('institute')
         setShowInstituteOnboarding(false)
+        setCurrentUserId(userId)
         setLoadingState(false)
         setLoading(false)
         setAuthChecked(true)
@@ -110,6 +111,7 @@ export default function Home() {
         // Institute admin but no institute yet → show onboarding
         setUserType('institute')
         setShowInstituteOnboarding(true)
+        setCurrentUserId(userId)
         setLoadingState(false)
         setLoading(false)
         setAuthChecked(true)
@@ -192,7 +194,26 @@ export default function Home() {
   if (userType === 'institute') {
     // No institute record yet → show onboarding
     if (!institute || showInstituteOnboarding) {
-      return <InstituteOnboardingWrapper />
+      return (
+        <InstituteOnboarding
+          userId={currentUserId || ''}
+          onComplete={async () => {
+            // Re-fetch institute data instead of reloading the page
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+              const { data: instituteData } = await supabase
+                .from('institutes')
+                .select('*')
+                .eq('admin_user_id', user.id)
+                .maybeSingle()
+              if (instituteData) {
+                setInstitute(instituteData as Institute)
+                setShowInstituteOnboarding(false)
+              }
+            }
+          }}
+        />
+      )
     }
     // Has institute → show dashboard
     return <InstituteAdminDashboard userId={institute.admin_user_id} institute={institute} />
@@ -207,30 +228,4 @@ export default function Home() {
   }
 
   return null
-}
-
-// Separate component to avoid hook-in-render issues
-function InstituteOnboardingWrapper() {
-  const [currentUserId, setCurrentUserId] = useState<string>('')
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setCurrentUserId(user.id)
-    })
-  }, [])
-
-  if (!currentUserId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    )
-  }
-
-  return (
-    <InstituteOnboarding
-      userId={currentUserId}
-      onComplete={() => window.location.reload()}
-    />
-  )
 }
