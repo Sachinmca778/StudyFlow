@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store/auth'
 import { Assignment, Subject, Exam } from '@/lib/types'
 import { Plus, Trash2, Edit, Calendar, Award, Clock, CheckCircle2, Loader2 } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
+import PageLoader from '@/components/ui/PageLoader'
 
 export default function AssignmentManager() {
   const { profile } = useAuthStore()
@@ -187,11 +188,7 @@ export default function AssignmentManager() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   const upcomingAssignments = assignments.filter(a => 

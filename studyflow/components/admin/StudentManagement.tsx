@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { Institute, InstituteStudent, Batch } from '@/lib/institute-types'
 import { Plus, Search, Edit, Trash2, Phone, Mail, RefreshCw } from 'lucide-react'
 import { generateEnrollmentNumber } from '@/lib/enrollment'
+import PageLoader from '@/components/ui/PageLoader'
 
 type StudentManagementProps = {
   institute: Institute
@@ -217,6 +218,8 @@ export default function StudentManagement({ institute }: StudentManagementProps)
   }
 
   const classStats = getClassStats()
+
+  if (loading && students.length === 0) return <PageLoader />
 
   return (
     <div>

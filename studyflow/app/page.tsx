@@ -171,41 +171,105 @@ export default function Home() {
   // ─── Loading State ───────────────────────────────────────────────────────────
   if (loading || !authChecked) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-4 animate-fade-in">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30">
-            <Loader2 className="w-8 h-8 text-white animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex relative overflow-hidden">
+
+        {/* ── Fake Dashboard UI in background ── */}
+        {/* Sidebar */}
+        <aside className="hidden lg:flex flex-col w-72 bg-white border-r border-gray-100 h-screen flex-shrink-0">
+          {/* Logo area */}
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl" />
+              <div className="h-5 w-24 bg-gray-200 rounded-lg animate-pulse" />
+            </div>
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              StudyFlow
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">Loading your workspace...</p>
+          {/* Profile card */}
+          <div className="p-4 mx-4 mt-4 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-300 to-indigo-300 rounded-full animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 bg-gray-200 rounded-lg w-3/4 animate-pulse" />
+                <div className="h-3 bg-gray-200 rounded-lg w-1/2 animate-pulse" />
+              </div>
+            </div>
           </div>
+          {/* Nav items */}
+          <nav className="flex-1 p-4 space-y-2">
+            {[100, 85, 70, 60, 50, 40, 35].map((opacity, i) => (
+              <div
+                key={i}
+                className="h-11 bg-gray-100 rounded-xl animate-pulse"
+                style={{ opacity: opacity / 100 }}
+              />
+            ))}
+          </nav>
+          {/* Sign out */}
+          <div className="p-4 border-t border-gray-100">
+            <div className="h-11 bg-gray-100 rounded-xl animate-pulse opacity-40" />
+          </div>
+        </aside>
+
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col">
+          {/* Top bar */}
+          <header className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-6 w-36 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="h-3.5 w-52 bg-gray-100 rounded-lg animate-pulse" />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block h-10 w-28 bg-emerald-50 border border-emerald-100 rounded-xl animate-pulse" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-300 to-indigo-300 rounded-full animate-pulse" />
+            </div>
+          </header>
+
+          {/* Page content */}
+          <main className="p-6 flex-1 space-y-5">
+            {/* Stats row */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[100, 90, 80, 70].map((op, i) => (
+                <div key={i} className="h-28 bg-white rounded-2xl border border-gray-100 animate-pulse" style={{ opacity: op / 100 }} />
+              ))}
+            </div>
+            {/* Chart area */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2 h-56 bg-white rounded-2xl border border-gray-100 animate-pulse opacity-90" />
+              <div className="h-56 bg-white rounded-2xl border border-gray-100 animate-pulse opacity-80" />
+            </div>
+            {/* Bottom row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="h-36 bg-white rounded-2xl border border-gray-100 animate-pulse opacity-70" />
+              <div className="h-36 bg-white rounded-2xl border border-gray-100 animate-pulse opacity-60" />
+            </div>
+          </main>
         </div>
 
-        {/* Skeleton preview — gives a sense of the layout loading */}
-        <div className="mt-12 w-full max-w-4xl px-6 animate-pulse">
-          <div className="flex gap-4">
-            {/* Sidebar skeleton */}
-            <div className="hidden lg:flex flex-col gap-3 w-56 flex-shrink-0">
-              <div className="h-10 bg-gray-200 rounded-xl" />
-              <div className="h-10 bg-gray-200 rounded-xl opacity-80" />
-              <div className="h-10 bg-gray-200 rounded-xl opacity-60" />
-              <div className="h-10 bg-gray-200 rounded-xl opacity-40" />
-              <div className="h-10 bg-gray-200 rounded-xl opacity-30" />
-            </div>
-            {/* Content skeleton */}
-            <div className="flex-1 flex flex-col gap-4">
-              <div className="h-8 bg-gray-200 rounded-xl w-1/3" />
-              <div className="grid grid-cols-3 gap-3">
-                <div className="h-24 bg-gray-200 rounded-xl" />
-                <div className="h-24 bg-gray-200 rounded-xl opacity-80" />
-                <div className="h-24 bg-gray-200 rounded-xl opacity-60" />
+        {/* ── Frosted glass overlay + centered loader ── */}
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-4">
+            {/* Animated logo */}
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/40">
+                <Loader2 className="w-9 h-9 text-white animate-spin" />
               </div>
-              <div className="h-40 bg-gray-200 rounded-xl opacity-70" />
-              <div className="h-24 bg-gray-200 rounded-xl opacity-50" />
+              {/* Glow ring */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 opacity-20 blur-xl scale-150" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                StudyFlow
+              </h1>
+              <p className="text-gray-500 text-sm mt-1">Loading your workspace...</p>
+            </div>
+            {/* Progress dots */}
+            <div className="flex gap-1.5 mt-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 rounded-full bg-blue-500"
+                  style={{ animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite` }}
+                />
+              ))}
             </div>
           </div>
         </div>

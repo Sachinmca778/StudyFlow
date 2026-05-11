@@ -7,6 +7,7 @@ import {
   Plus, Search, Filter, Calendar, Clock, CheckCircle, 
   XCircle, Edit2, Trash2, Eye, FileText, Upload, Download
 } from 'lucide-react'
+import PageLoader from '@/components/ui/PageLoader'
 
 type AssignmentManagementProps = {
   institute: Institute
@@ -221,9 +222,7 @@ export default function AssignmentManagement({ institute }: AssignmentManagement
       {/* Assignments List */}
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          </div>
+          <PageLoader />
         ) : filteredAssignments.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />

@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store/auth'
 import { StudyPlan, Assignment, Exam, Subject } from '@/lib/types'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, FileText, AlertCircle } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns'
+import PageLoader from '@/components/ui/PageLoader'
 
 export default function CalendarView() {
   const { profile } = useAuthStore()
@@ -125,11 +126,7 @@ export default function CalendarView() {
   const selectedDateEvents = selectedDate ? getEventsForDay(selectedDate) : []
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (

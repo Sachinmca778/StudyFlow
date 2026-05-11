@@ -256,3 +256,14 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}

@@ -7,6 +7,7 @@ import {
   Plus, Search, Bell, AlertCircle, Calendar, Users, 
   Edit2, Trash2, Eye, Send, Filter, Megaphone
 } from 'lucide-react'
+import PageLoader from '@/components/ui/PageLoader'
 
 type CommunicationCenterProps = {
   institute: Institute
@@ -356,9 +357,7 @@ export default function CommunicationCenter({ institute }: CommunicationCenterPr
       {/* Announcements List */}
       <div className="grid grid-cols-1 gap-4">
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          </div>
+          <PageLoader />
         ) : filteredAnnouncements.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
             <Megaphone className="w-16 h-16 text-gray-400 mx-auto mb-4" />

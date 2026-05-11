@@ -7,6 +7,7 @@ import {
   Users, GraduationCap, IndianRupee, TrendingUp, AlertCircle, 
   CheckCircle, FileText, Bell, Calendar, Award, Clock
 } from 'lucide-react'
+import PageLoader from '@/components/ui/PageLoader'
 
 type AdminOverviewProps = {
   institute: Institute
@@ -245,11 +246,7 @@ export default function AdminOverview({ institute }: AdminOverviewProps) {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (

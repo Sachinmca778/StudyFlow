@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Institute, Batch } from '@/lib/institute-types'
 import { Plus, Edit, Trash2, Users, Calendar, IndianRupee } from 'lucide-react'
+import PageLoader from '@/components/ui/PageLoader'
 
 type BatchManagementProps = {
   institute: Institute
@@ -116,6 +117,8 @@ export default function BatchManagement({ institute }: BatchManagementProps) {
   }
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+  if (loading && batches.length === 0) return <PageLoader />
 
   return (
     <div>

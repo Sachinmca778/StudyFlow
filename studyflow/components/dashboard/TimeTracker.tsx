@@ -6,6 +6,7 @@ import { useAuthStore } from '@/lib/store/auth'
 import { Subject, StudySession } from '@/lib/types'
 import { Play, Square, Plus, Trash2, Clock, Loader2, CheckCircle2, Star, BookOpen } from 'lucide-react'
 import { format } from 'date-fns'
+import PageLoader from '@/components/ui/PageLoader'
 
 export default function TimeTracker() {
   const { profile } = useAuthStore()
@@ -285,11 +286,7 @@ export default function TimeTracker() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (

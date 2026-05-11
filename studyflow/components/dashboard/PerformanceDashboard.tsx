@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/store/auth'
 import { Clock, TrendingUp, Target, Award, Calendar, Zap, BarChart3, Trophy } from 'lucide-react'
 import { format, startOfWeek, startOfMonth } from 'date-fns'
+import PageLoader from '@/components/ui/PageLoader'
 
 export default function PerformanceDashboard() {
   const { profile } = useAuthStore()
@@ -136,11 +137,7 @@ export default function PerformanceDashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   const dailyGoal = (profile?.daily_study_goal || 120) / 60
